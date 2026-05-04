@@ -1,7 +1,7 @@
 /* Base styles from react-sortable-tree (trimmed for EventsTree usage) */
 
 .rst__rowWrapper {
-  padding: 10px 10px 10px 0;
+  padding: 12px 12px 12px 0;
   height: 100%;
   box-sizing: border-box;
 }

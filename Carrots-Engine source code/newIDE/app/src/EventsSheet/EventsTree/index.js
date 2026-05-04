@@ -73,7 +73,7 @@ const smallIndentWidth = 11;
 const styles = {
   container: { flex: 1, position: 'relative' },
   defaultEventContainer: {
-    marginRight: 10,
+    marginRight: 0,
     position: 'relative',
   },
   smallEventContainer: {
@@ -84,6 +84,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'stretch',
+    alignItems: 'stretch',
     position: 'relative',
   },
 };

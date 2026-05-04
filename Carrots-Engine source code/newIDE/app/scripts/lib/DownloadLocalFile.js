@@ -11,6 +11,7 @@ const downloadLocalFile = async (url, outputPath) => {
   const writer = fs.createWriteStream(outputPath);
   const response = await axios.get(url, {
     responseType: 'stream',
+    timeout: 15000,
   });
 
   return new Promise((resolve, reject) => {

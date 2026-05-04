@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\Scene3D.dir/objects.a
+C:\mingw64\mingw64\bin\ar.exe qc CMakeFiles\Scene3D.dir/objects.a @CMakeFiles\Scene3D.dir\objects1.rsp
+C:\mingw64\mingw64\bin\g++.exe -O3 -DNDEBUG -shared -o "C:\Users\Tech Shop\Desktop\carrots Game engine files\Carrots-Game-Engine\Carrots-Engine source code\Binaries\Output\Release_Windows\CppPlatform\Extensions\Scene3D.xgdwe" -Wl,--out-implib,"C:\Users\Tech Shop\Desktop\carrots Game engine files\Carrots-Game-Engine\Carrots-Engine source code\Binaries\Output\Release_Windows\CppPlatform\Extensions\libScene3D.dll.a" -Wl,--major-image-version,0,--minor-image-version,0 -Wl,--whole-archive CMakeFiles\Scene3D.dir/objects.a -Wl,--no-whole-archive @CMakeFiles\Scene3D.dir\linkLibs.rsp

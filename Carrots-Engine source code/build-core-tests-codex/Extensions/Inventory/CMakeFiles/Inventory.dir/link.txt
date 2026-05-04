@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\Inventory.dir/objects.a
+C:\mingw64\mingw64\bin\ar.exe qc CMakeFiles\Inventory.dir/objects.a @CMakeFiles\Inventory.dir\objects1.rsp
+C:\mingw64\mingw64\bin\g++.exe -O3 -DNDEBUG -shared -o "C:\Users\Tech Shop\Desktop\carrots Game engine files\Carrots-Game-Engine\Carrots-Engine source code\Binaries\Output\Release_Windows\CppPlatform\Extensions\Inventory.xgdwe" -Wl,--out-implib,"C:\Users\Tech Shop\Desktop\carrots Game engine files\Carrots-Game-Engine\Carrots-Engine source code\Binaries\Output\Release_Windows\CppPlatform\Extensions\libInventory.dll.a" -Wl,--major-image-version,0,--minor-image-version,0 -Wl,--whole-archive CMakeFiles\Inventory.dir/objects.a -Wl,--no-whole-archive @CMakeFiles\Inventory.dir\linkLibs.rsp

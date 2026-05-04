@@ -1,0 +1,31 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/ExtLibs/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Core/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/GDJS/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/3D/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/AnchorBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/DestroyOutsideBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/DraggableBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/Inventory/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/LinkedObjects/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/NavMeshBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/PanelSpriteObject/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/ParticleSystem/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/PathfindingBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/PhysicsBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/PlatformBehavior/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/PrimitiveDrawing/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/Shopify/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/SystemInfo/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/TextEntryObject/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/TextObject/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/TiledSpriteObject/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/Spine/cmake_install.cmake",
+		"C:/Users/Tech Shop/Desktop/carrots Game engine files/Carrots-Game-Engine/Carrots-Engine source code/build-core-tests-codex/Extensions/TopDownMovementBehavior/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

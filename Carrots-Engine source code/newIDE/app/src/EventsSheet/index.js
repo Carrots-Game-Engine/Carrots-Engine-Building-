@@ -55,7 +55,6 @@ import {
   getSelectedInstructionsLocatingEvents,
   selectEventsAfterHistoryChange,
   getLastSelectedTopMostOnlyEventContext,
-  getSelectedEventContexts,
   getSelectedTopMostOnlyEventContexts,
   getLastSelectedEventContext,
   getLastSelectedEventContextWhichCanHaveSubEvents,
@@ -130,8 +129,6 @@ import {
   safeCanHaveSubEvents,
   safeCanHaveVariables,
 } from '../Utils/GDevelopEventHelpers';
-import { isElseEventValid } from './EventsTree/helpers';
-import EventInspectorPanel from './EventInspectorPanel';
 import EventsBlueprintView from './BlueprintView';
 
 const gd: libGDevelop = global.gd;
@@ -265,6 +262,11 @@ const styles = {
     display: 'flex',
     flex: 1,
     minHeight: 0,
+    minWidth: 0,
+    padding: '14px 18px 18px',
+    boxSizing: 'border-box',
+    background:
+      'linear-gradient(180deg, color-mix(in srgb, var(--event-sheet-selectable-background-color) 34%, transparent) 0%, transparent 140px)',
   },
   editorMainColumn: {
     display: 'flex',
@@ -272,6 +274,7 @@ const styles = {
     flex: 1,
     minWidth: 0,
     minHeight: 0,
+    gap: 10,
   },
 };
 
@@ -1894,18 +1897,6 @@ export class EventsSheetComponentWithoutHandle extends React.Component<
     if (didMutateLoopEvent) commitEventChanges(fixedUpdateLoopEvent);
   };
 
-  _openSelectedInstructionEditorFromInspector = () => {
-    const instructionContext = getLastSelectedInstructionContext(
-      this.state.selection
-    );
-    if (!instructionContext) return;
-
-    this.openInstructionEditor(
-      instructionContext.eventContext,
-      instructionContext
-    );
-  };
-
   _replaceSelectedEventType = (eventType: string) => {
     const eventContext = getLastSelectedEventContext(this.state.selection);
     if (!eventContext) return;
@@ -2908,34 +2899,6 @@ export class EventsSheetComponentWithoutHandle extends React.Component<
       }
     }
 
-    const selectedInstructionContext = isActive
-      ? getLastSelectedInstructionContext(this.state.selection)
-      : null;
-    const selectedEventContext = isActive
-      ? getLastSelectedEventContext(this.state.selection)
-      : null;
-    const selectedEventsCount = isActive
-      ? getSelectedEventContexts(this.state.selection).length
-      : 0;
-    const selectedInstructionsCount = isActive
-      ? getSelectedInstructionsContexts(this.state.selection).length
-      : 0;
-    let isSelectedElseEventValid = true;
-    if (
-      isActive &&
-      selectedEventContext &&
-      this._getSafeEventTypeFromContext(selectedEventContext) ===
-        'BuiltinCommonInstructions::Else'
-    ) {
-      try {
-        isSelectedElseEventValid = isElseEventValid(
-          selectedEventContext.eventsList,
-          selectedEventContext.indexInList
-        );
-      } catch (error) {
-        console.warn('Ignoring stale else-event context in inspector.', error);
-      }
-    }
     const eventMetadataByType: { [string]: EventMetadata } = {};
     if (isActive) {
       this.state.allEventsMetadata.forEach(eventMetadata => {
@@ -3154,55 +3117,6 @@ export class EventsSheetComponentWithoutHandle extends React.Component<
                   )}
                 </div>
 
-                {isActive && (
-                  <ErrorBoundary
-                    componentTitle={<Trans>Event inspector</Trans>}
-                    scope="scene-events-inspector"
-                  >
-                    <EventInspectorPanel
-                      project={project}
-                      selectedEventContext={selectedEventContext}
-                      selectedEventsCount={selectedEventsCount}
-                      selectedInstructionContext={selectedInstructionContext}
-                      selectedInstructionsCount={selectedInstructionsCount}
-                      eventMetadataByType={eventMetadataByType}
-                      isSelectedElseEventValid={isSelectedElseEventValid}
-                      canAddLoopIndexVariable={
-                        this._selectionIsLoopEvent() &&
-                        !this._selectionHasIndexVariable()
-                      }
-                      canRemoveLoopIndexVariable={
-                        this._selectionIsLoopEvent() &&
-                        this._selectionHasIndexVariable()
-                      }
-                      onSetSelectedInstructionInverted={
-                        this._setSelectedInstructionInverted
-                      }
-                      onSetSelectedInstructionAwaited={
-                        this._setSelectedInstructionAwaited
-                      }
-                      onSetInstructionParameterValue={
-                        this._setSelectedInstructionParameterValue
-                      }
-                      onOpenSelectedInstructionEditor={
-                        this._openSelectedInstructionEditorFromInspector
-                      }
-                      onToggleDisabledEvent={this._toggleSelectedEventDisabled}
-                      onSetEventFolded={this._setSelectedEventFolded}
-                      onSetGroupName={this._setSelectedGroupName}
-                      onSetCommentText={this._setSelectedCommentText}
-                      onSetLocalVariablePrimitiveValue={
-                        this._setSelectedLocalVariablePrimitiveValue
-                      }
-                      onAddLocalVariable={this._addSelectedLocalVariable}
-                      onOpenLocalVariablesDialog={
-                        this._openSelectedLocalVariablesDialog
-                      }
-                      onAddLoopIndexVariable={this._addLoopIndexVariable}
-                      onRemoveLoopIndexVariable={this._removeLoopIndexVariable}
-                    />
-                  </ErrorBoundary>
-                )}
               </div>
               <InlineParameterEditor
                 open={this.state.inlineEditing}

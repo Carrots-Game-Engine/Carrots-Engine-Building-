@@ -257,6 +257,9 @@ void gd::EventsListSerialization::UnserializeInstructionsFrom(
     gd::InstructionsList& instructions,
     const SerializerElement& elem) {
   elem.ConsiderAsArrayOf("instruction");
+  const bool hasLegacyInstructionContainer =
+      elem.HasChild("condition", "Condition") ||
+      elem.HasChild("action", "Action");
   // Compatibility with GD <= 4.0.95
   if (elem.HasChild("condition", "Condition"))
     elem.ConsiderAsArrayOf("condition", "Condition");
@@ -264,6 +267,7 @@ void gd::EventsListSerialization::UnserializeInstructionsFrom(
     elem.ConsiderAsArrayOf("action", "Action");
   // end of compatibility code
 
+  bool hasLegacyInstructionParameters = false;
   for (std::size_t i = 0; i < elem.GetChildrenCount(); ++i) {
     gd::Instruction instruction;
     const SerializerElement& instrElement = elem.GetChild(i);
@@ -285,6 +289,7 @@ void gd::EventsListSerialization::UnserializeInstructionsFrom(
 
     // Compatibility with GD <= 3.3
     if (instrElement.HasChild("Parametre")) {
+      hasLegacyInstructionParameters = true;
       for (std::size_t j = 0; j < instrElement.GetChildrenCount("Parametre");
            ++j)
         parameters.push_back(gd::Expression(
@@ -322,6 +327,19 @@ void gd::EventsListSerialization::UnserializeInstructionsFrom(
     // end of compatibility code
 
     instructions.Insert(instruction);
+  }
+
+  const bool hasUnknownSavedVersion =
+      project.GetLastSaveGDMajorVersion() == 0 &&
+      project.GetLastSaveGDMinorVersion() == 0 &&
+      project.GetLastSaveGDBuildVersion() == 0;
+  const bool hasLegacySerializationMarkers =
+      hasLegacyInstructionContainer || hasLegacyInstructionParameters;
+  const bool shouldApplyLegacyCompatibilityUpdates =
+      !hasUnknownSavedVersion || hasLegacySerializationMarkers;
+
+  if (!shouldApplyLegacyCompatibilityUpdates) {
+    return;
   }
 
   // Compatibility with GD <= 3.1

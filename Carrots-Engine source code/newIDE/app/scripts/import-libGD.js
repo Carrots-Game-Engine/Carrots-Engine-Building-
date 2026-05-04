@@ -68,10 +68,33 @@ const getBranchFromGitRef = gitRef => {
   return branch;
 };
 
+const isKnownGitBranch = branch =>
+  !!branch && branch !== 'unknown-branch' && branch !== 'HEAD';
+
 const MIN_LIBGD_JS_SIZE_BYTES = 1024 * 1024;
 const MIN_LIBGD_WASM_SIZE_BYTES = 1024 * 1024;
+const LIBGD_API_VALIDATION_TIMEOUT_MS = 30000;
+const LIBGD_DOWNLOAD_TIMEOUT_MS = 25000;
 
-const validateDownloadedLibGdJs = baseUrl => {
+const withTimeout = (promise, timeoutMs, message) =>
+  new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+
+    promise.then(
+      result => {
+        clearTimeout(timeout);
+        resolve(result);
+      },
+      error => {
+        clearTimeout(timeout);
+        reject(error);
+      }
+    );
+  });
+
+const validateDownloadedLibGdJs = async baseUrl => {
   const libGdJsPath = path.join(__dirname, '..', 'public', 'libGD.js');
   const libGdWasmPath = path.join(__dirname, '..', 'public', 'libGD.wasm');
 
@@ -103,18 +126,58 @@ const validateDownloadedLibGdJs = baseUrl => {
     );
     throw new Error('Invalid libGD.js JavaScript syntax');
   }
+
+  const validationScript = `
+const fs = require('fs');
+const initializeGDevelopJs = require(${JSON.stringify(libGdJsPath)});
+const wasmBinary = fs.readFileSync(${JSON.stringify(libGdWasmPath)});
+const moduleLike = initializeGDevelopJs({ wasmBinary });
+if (!moduleLike || typeof moduleLike.then !== 'function') {
+  process.exit(2);
+}
+moduleLike.then(gd => {
+  const hasProjectScopedContainers =
+    !!gd.ProjectScopedContainers &&
+    typeof gd.ProjectScopedContainers.makeNewProjectScopedContainersForProject === 'function';
+  const hasExpectedExtensionApi =
+    !!gd.PlatformExtension &&
+    !!gd.PlatformExtension.prototype &&
+    typeof gd.PlatformExtension.prototype.setExtensionInformation === 'function' &&
+    typeof gd.PlatformExtension.prototype.setShortDescription === 'function';
+  process.exit(hasProjectScopedContainers && hasExpectedExtensionApi ? 0 : 3);
+}, () => process.exit(4));
+`;
+  const validationResult = spawnSync(process.execPath, ['-e', validationScript], {
+    stdio: 'ignore',
+    timeout: LIBGD_API_VALIDATION_TIMEOUT_MS,
+  });
+  if (validationResult.error || validationResult.status !== 0) {
+    console.warn(
+      `Warning: Downloaded libGD.js is missing required editor APIs (baseUrl=${baseUrl}), trying another source.`
+    );
+    throw new Error('Incompatible libGD.js API');
+  }
 };
 
 const downloadLibGdJs = baseUrl =>
-  Promise.all([
-    downloadLocalFile(baseUrl + '/libGD.js', '../public/libGD.js'),
-    downloadLocalFile(baseUrl + '/libGD.wasm', '../public/libGD.wasm'),
-  ]).then(
-    responses => {
-      validateDownloadedLibGdJs(baseUrl);
-      return responses;
-    },
+  withTimeout(
+    Promise.all([
+      downloadLocalFile(baseUrl + '/libGD.js', '../public/libGD.js'),
+      downloadLocalFile(baseUrl + '/libGD.wasm', '../public/libGD.wasm'),
+    ]),
+    LIBGD_DOWNLOAD_TIMEOUT_MS,
+    `Timed out while downloading libGD.js from ${baseUrl}`
+  ).then(
+    responses => validateDownloadedLibGdJs(baseUrl).then(() => responses),
     error => {
+      if (
+        error &&
+        typeof error.message === 'string' &&
+        error.message.includes('Timed out while downloading libGD.js')
+      ) {
+        console.warn(`Warning: ${error.message}, trying another source.`);
+        throw error;
+      }
       if (error.statusCode === 403) {
         console.info(
           'Maybe libGD.js was not automatically built yet, try again in a few minutes.'
@@ -156,13 +219,13 @@ const downloadLibGdJsWithRetries = (baseUrl, maxAttempts = 3) => {
   return download();
 };
 
-const downloadCommitLibGdJs = gitRef =>
+const downloadCommitLibGdJs = (gitRef, branchOverride = null) =>
   new Promise((resolve, reject) => {
     console.info(`Trying to download libGD.js for ${gitRef}.`);
 
     const hash = getGitOutput(`git rev-parse "${gitRef}"`);
-    const branch = getBranchFromGitRef(gitRef);
-    if (!hash || !branch) {
+    const branch = branchOverride || getBranchFromGitRef(gitRef);
+    if (!hash || !isKnownGitBranch(branch)) {
       console.warn("Warning: Can't find the hash or branch of the associated commit.");
       reject();
       return;
@@ -182,6 +245,11 @@ const downloadBranchLatestLibGdJs = branchName => {
   );
 };
 
+const downloadEditorHostedLatestLibGdJs = hostBaseUrl => {
+  console.info(`Trying to download libGD.js from ${hostBaseUrl}.`);
+  return downloadLibGdJsWithRetries(hostBaseUrl);
+};
+
 const onLibGdJsDownloaded = () => {
   console.info('libGD.js downloaded and stored in public/libGD.js');
 
@@ -192,6 +260,27 @@ const onLibGdJsDownloaded = () => {
   } catch (error) {
     console.error('Error while copying libGD.js to node_modules folder');
   }
+};
+
+const useExistingLibGdJsIfValid = () => {
+  if (
+    process.env.APPVEYOR ||
+    process.env.REQUIRES_EXACT_LIBGD_JS_VERSION ||
+    !alreadyHasLibGdJs
+  ) {
+    return Promise.resolve(false);
+  }
+
+  console.info('Checking existing local libGD.js before downloading...');
+  return validateDownloadedLibGdJs('existing local copy')
+    .then(() => {
+      console.info(
+        'Existing local libGD.js is compatible. Skipping network download.'
+      );
+      onLibGdJsDownloaded();
+      return true;
+    })
+    .catch(() => false);
 };
 
 if (fileExists(path.join(sourceDirectory, 'libGD.js'))) {
@@ -210,33 +299,30 @@ if (fileExists(path.join(sourceDirectory, 'libGD.js'))) {
   }
 } else {
   // Download a pre-built version otherwise
-  console.info(
-    'Downloading pre-built libGD.js from https://s3.amazonaws.com/gdevelop-gdevelop.js (be patient)...'
-  );
-
-  const branch = getBranchFromGitRef('HEAD');
-
-  // Try to download the latest libGD.js, fallback to previous or master ones
-  // if not found (including different parents, for handling of merge commits).
-  downloadCommitLibGdJs('HEAD').then(onLibGdJsDownloaded, () => {
-    // Force the exact version of GDevelop.js to be downloaded for AppVeyor - because
-    // this means we build the app and we don't want to risk mismatch (Core C++ not up to date
-    // with the IDE JavaScript).
-    if (process.env.APPVEYOR || process.env.REQUIRES_EXACT_LIBGD_JS_VERSION) {
-      console.error(
-        "Can't download the exact required version of libGD.js - check it was built by CircleCI before running this CI."
-      );
-      console.info(
-        'See the pipeline on https://app.circleci.com/pipelines/github/4ian/GDevelop.'
-      );
-      process.exit(1);
+  useExistingLibGdJsIfValid().then(usedExistingLibGdJs => {
+    if (usedExistingLibGdJs) {
+      process.exit(0);
+      return;
     }
 
-    downloadCommitLibGdJs('HEAD~1').then(onLibGdJsDownloaded, () =>
-      downloadCommitLibGdJs('HEAD~2').then(onLibGdJsDownloaded, () =>
-        downloadCommitLibGdJs('HEAD~3').then(onLibGdJsDownloaded, () =>
-          downloadBranchLatestLibGdJs(branch).then(onLibGdJsDownloaded, () =>
-            downloadBranchLatestLibGdJs('master').then(onLibGdJsDownloaded, () => {
+    console.info(
+      'Downloading pre-built libGD.js from https://s3.amazonaws.com/gdevelop-gdevelop.js (be patient)...'
+    );
+
+    const branch = getBranchFromGitRef('HEAD');
+    const canUseCommitSpecificDownloads = isKnownGitBranch(branch);
+
+    // Try to download the latest libGD.js, fallback to previous or master ones
+    // if not found (including different parents, for handling of merge commits).
+    const downloadStableFallbacks = () =>
+      downloadBranchLatestLibGdJs('main').then(onLibGdJsDownloaded, () =>
+        downloadBranchLatestLibGdJs('master').then(onLibGdJsDownloaded, () =>
+          downloadEditorHostedLatestLibGdJs(
+            'https://editor-dev.gdevelop.io'
+          ).then(onLibGdJsDownloaded, () =>
+            downloadEditorHostedLatestLibGdJs(
+              'https://editor.gdevelop.io'
+            ).then(onLibGdJsDownloaded, () => {
               if (alreadyHasLibGdJs) {
                 console.info(
                   "Can't download any version of libGD.js, assuming you can go ahead with the existing one."
@@ -253,7 +339,35 @@ if (fileExists(path.join(sourceDirectory, 'libGD.js'))) {
             })
           )
         )
-      )
-    );
+      );
+
+    const downloadPreferredSources = canUseCommitSpecificDownloads
+      ? downloadCommitLibGdJs('HEAD', branch).then(onLibGdJsDownloaded, () =>
+          downloadCommitLibGdJs('HEAD~1', branch).then(onLibGdJsDownloaded, () =>
+            downloadCommitLibGdJs('HEAD~2', branch).then(onLibGdJsDownloaded, () =>
+              downloadCommitLibGdJs('HEAD~3', branch).then(onLibGdJsDownloaded, () =>
+                downloadBranchLatestLibGdJs(branch).then(onLibGdJsDownloaded, () =>
+                  downloadStableFallbacks()
+                )
+              )
+            )
+          )
+        )
+      : downloadStableFallbacks();
+
+    downloadPreferredSources.then(undefined, () => {
+      // Force the exact version of GDevelop.js to be downloaded for AppVeyor - because
+      // this means we build the app and we don't want to risk mismatch (Core C++ not up to date
+      // with the IDE JavaScript).
+      if (process.env.APPVEYOR || process.env.REQUIRES_EXACT_LIBGD_JS_VERSION) {
+        console.error(
+          "Can't download the exact required version of libGD.js - check it was built by CircleCI before running this CI."
+        );
+        console.info(
+          'See the pipeline on https://app.circleci.com/pipelines/github/4ian/GDevelop.'
+        );
+        process.exit(1);
+      }
+    });
   });
 }

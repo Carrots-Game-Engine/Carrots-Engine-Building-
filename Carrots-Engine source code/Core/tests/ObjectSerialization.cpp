@@ -423,6 +423,7 @@ TEST_CASE("ObjectSerialization", "[common]") {
         eventsExtension.GetEventsFunctions().InsertNewEventsFunction(
             "MyFunction", 0);
     auto standardEvent = std::make_shared<gd::StandardEvent>();
+    standardEvent->SetType("BuiltinCommonInstructions::Standard");
 
     gd::Instruction condition;
     condition.SetType("NumberVariable");
