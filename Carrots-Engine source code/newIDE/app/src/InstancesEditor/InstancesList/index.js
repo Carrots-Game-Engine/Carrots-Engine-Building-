@@ -396,7 +396,9 @@ const InstancesList = (props: Props): React.Node => {
       const keepWorld = getKeepWorldOnReparent();
 
       selectedInstances.forEach(instance => {
-        const currentParentPersistentUuid = instance.getParentPersistentUuid();
+        const currentParentPersistentUuid = typeof instance.getParentPersistentUuid === 'function'
+          ? instance.getParentPersistentUuid()
+          : null;
         if (currentParentPersistentUuid === parentPersistentUuid) return;
         if (
           destinationInstance &&

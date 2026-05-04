@@ -23,6 +23,7 @@ import ObjectsRenderingService from '../../ObjectsRendering/ObjectsRenderingServ
 import ProjectResourcesPanel from '../ProjectResourcesPanel';
 import EditorConsolePanel from '../EditorConsolePanel';
 import BuildPanel from '../BuildPanel';
+import ObjectsAndHierarchyPanel from '../ObjectsAndHierarchyPanel';
 
 import Rectangle from '../../Utils/Rectangle';
 import { type EditorId } from '../utils';
@@ -41,30 +42,28 @@ import { EmbeddedGameFrameHole } from '../../EmbeddedGame/EmbeddedGameFrameHole'
 const SCENE_EDITOR_MOSAIC_LAYOUT_KEY = 'scene-editor-unity-layout-v1';
 
 const initialMosaicEditorNodes = {
-  direction: 'column',
-  splitPercentage: 74,
+  direction: 'row',
+  splitPercentage: 75,
   first: {
     direction: 'row',
-    splitPercentage: 18,
-    first: 'instances-list',
-    second: {
-      direction: 'row',
-      splitPercentage: 77,
-      first: 'instances-editor',
-      second: 'properties',
-    },
+    splitPercentage: 22,
+    first: 'objects-and-hierarchy',
+    second: 'instances-editor',
   },
-  second: 'project-resources',
+  second: 'properties',
 };
 
 const noop = () => {};
 
 const defaultPanelConfigByEditor = {
-  'objects-list': {
+  'objects-and-hierarchy': {
     position: 'left',
   },
   properties: {
     position: 'right',
+  },
+  'objects-list': {
+    position: 'left',
   },
   'object-groups-list': {
     position: 'left',
@@ -131,6 +130,10 @@ const MosaicEditorsDisplay: React.ComponentType<{
     const objectsListRef = React.useRef<?ObjectsListInterface>(null);
     const editorMosaicRef = React.useRef<?EditorMosaicInterface>(null);
     const objectGroupsListRef = React.useRef<?ObjectGroupsListInterface>(null);
+    const objectsAndHierarchyRef = React.useRef<?{|
+      forceUpdateObjectsList: () => void,
+      forceUpdateInstancesList: () => void,
+    |}>(null);
     const objectsListDoNowOrAfterRender = useDoNowOrAfterRender<?ObjectsListInterface>(
       objectsListRef
     );
@@ -144,6 +147,9 @@ const MosaicEditorsDisplay: React.ComponentType<{
     }, []);
     const forceUpdateObjectsList = React.useCallback(() => {
       if (objectsListRef.current) objectsListRef.current.forceUpdateList();
+      if (objectsAndHierarchyRef.current)
+        objectsAndHierarchyRef.current.forceUpdateObjectsList();
+      if (instancesListRef.current) instancesListRef.current.forceUpdate();
     }, []);
     const forceUpdateObjectGroupsList = React.useCallback(() => {
       if (objectGroupsListRef.current)
@@ -204,12 +210,10 @@ const MosaicEditorsDisplay: React.ComponentType<{
     }, []);
     const openNewObjectDialog = React.useCallback(
       () => {
-        if (!isEditorVisible('objects-list')) {
-          // Objects list is not opened. Open it now.
-          toggleEditorView('objects-list');
+        if (!isEditorVisible('objects-and-hierarchy')) {
+          toggleEditorView('objects-and-hierarchy');
         }
 
-        // Open the new object dialog when the objects list is opened.
         objectsListDoNowOrAfterRender((objectsList: ?ObjectsListInterface) => {
           if (objectsList) objectsList.openNewObjectDialog();
         });
@@ -296,9 +300,83 @@ const MosaicEditorsDisplay: React.ComponentType<{
       : false;
 
     const editors = {
+      'objects-and-hierarchy': {
+        type: 'secondary',
+        title: t`Objects & Hierarchy`,
+        toolbarControls: [],
+        renderEditor: () => (
+          <ObjectsAndHierarchyPanel
+            project={project}
+            layout={layout}
+            eventsFunctionsExtension={eventsFunctionsExtension}
+            eventsBasedObject={eventsBasedObject}
+            eventsBasedObjectVariant={eventsBasedObjectVariant}
+            globalObjectsContainer={globalObjectsContainer}
+            objectsContainer={objectsContainer}
+            layersContainer={layersContainer}
+            initialInstances={initialInstances}
+            instancesSelection={props.instancesSelection}
+            selectedObjectFolderOrObjectsWithContext={
+              props.selectedObjectFolderOrObjectsWithContext
+            }
+            resourceManagementProps={resourceManagementProps}
+            unsavedChanges={props.unsavedChanges}
+            hotReloadPreviewButtonProps={props.hotReloadPreviewButtonProps}
+            onWillInstallExtension={onWillInstallExtension}
+            onExtensionInstalled={onExtensionInstalled}
+            onEditObject={props.onEditObject}
+            onOpenEventBasedObjectEditor={props.onOpenEventBasedObjectEditor}
+            onOpenEventBasedObjectVariantEditor={
+              props.onOpenEventBasedObjectVariantEditor
+            }
+            onOpenTypeScriptScripts={props.onOpenTypeScriptScripts}
+            onExportAssets={props.onExportAssets}
+            onImportAssets={props.onImportAssets}
+            onDeleteObjects={props.onDeleteObjects}
+            getValidatedObjectOrGroupName={props.getValidatedObjectOrGroupName}
+            onObjectCreated={props.onObjectCreated}
+            onObjectEdited={props.onObjectEdited}
+            onObjectFolderOrObjectWithContextSelected={
+              props.onObjectFolderOrObjectWithContextSelected
+            }
+            onRenameObjectFolderOrObjectWithContextFinish={
+              props.onRenameObjectFolderOrObjectWithContextFinish
+            }
+            onAddObjectInstance={props.onAddObjectInstance}
+            onObjectPasted={props.updateBehaviorsSharedData}
+            canObjectOrGroupBeGlobal={props.canObjectOrGroupBeGlobal}
+            onSetAsGlobalObject={props.onSetAsGlobalObject}
+            onSelectAllInstancesOfObjectInLayout={
+              props.onSelectAllInstancesOfObjectInLayout
+            }
+            onInstancesSelected={props.onInstancesSelected}
+            onInstancesModified={_onInstancesModified}
+            onInstancesAdded={props.onInstancesAdded}
+            onInstanceDoubleClicked={props.onInstanceDoubleClicked}
+            onInstancesMoved={props.onInstancesMoved}
+            onInstancesResized={props.onInstancesResized}
+            onInstancesRotated={props.onInstancesRotated}
+            canAdd2DObjectsToScene={props.canAdd2DObjectsToScene}
+            canAdd3DObjectsToScene={props.canAdd3DObjectsToScene}
+            isInstanceOf3DObject={props.isInstanceOf3DObject}
+            onContextMenu={props.onContextMenu}
+            tileMapTileSelection={props.tileMapTileSelection}
+            onSelectTileMapTile={props.onSelectTileMapTile}
+            projectScopedContainersAccessor={projectScopedContainersAccessor}
+            isListLocked={isCustomVariant}
+            onLayersModified={props.onLayersModified}
+            onChooseLayer={props.onChooseLayer}
+            onSelectLayer={props.onSelectLayer}
+            onBackgroundColorChanged={props.onBackgroundColorChanged}
+            gameEditorMode={props.gameEditorMode}
+            ref={objectsAndHierarchyRef}
+          />
+        ),
+      },
       properties: {
         type: 'secondary',
         title: t`Inspector`,
+        toolbarControls: [],
         renderEditor: () => (
           <I18n>
             {({ i18n }) => (
@@ -393,6 +471,7 @@ const MosaicEditorsDisplay: React.ComponentType<{
       'instances-list': {
         type: 'secondary',
         title: t`Hierarchy`,
+        toolbarControls: [],
         renderEditor: () => (
           <InstancesList
             instances={initialInstances}

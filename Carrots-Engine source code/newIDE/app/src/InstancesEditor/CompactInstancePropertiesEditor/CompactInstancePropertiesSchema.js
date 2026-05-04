@@ -613,10 +613,15 @@ const getParentField = ({
     return choices;
   },
   getValue: (instance: gdInitialInstance) =>
-    instance.getParentPersistentUuid() || '',
+    typeof instance.getParentPersistentUuid === 'function'
+      ? instance.getParentPersistentUuid() || ''
+      : '',
   setValue: (instance: gdInitialInstance, newValue: string) => {
     const parentPersistentUuid = newValue || '';
-    if (instance.getParentPersistentUuid() === parentPersistentUuid) return;
+    const currentParent = typeof instance.getParentPersistentUuid === 'function'
+      ? instance.getParentPersistentUuid()
+      : '';
+    if (currentParent === parentPersistentUuid) return;
 
     const keepWorld = getKeepWorldOnReparent();
 

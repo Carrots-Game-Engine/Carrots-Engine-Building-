@@ -2,14 +2,6 @@
 import { useCommand } from '../CommandPalette/CommandHooks';
 
 type Props = {|
-  toggleObjectsList: () => void,
-  toggleObjectGroupsList: () => void,
-  togglePropertiesPanel: () => void,
-  toggleInstancesList: () => void,
-  toggleLayersList: () => void,
-  toggleProjectPanel: () => void,
-  toggleConsolePanel: () => void,
-  toggleBuildPanel: () => void,
   undo: () => void,
   canUndo: boolean,
   redo: () => void,
@@ -23,38 +15,6 @@ type Props = {|
 |};
 
 const ToolbarCommands = (props: Props): null => {
-  useCommand('OPEN_OBJECTS_PANEL', true, {
-    handler: props.toggleObjectsList,
-  });
-
-  useCommand('OPEN_OBJECT_GROUPS_PANEL', true, {
-    handler: props.toggleObjectGroupsList,
-  });
-
-  useCommand('OPEN_PROPERTIES_PANEL', true, {
-    handler: props.togglePropertiesPanel,
-  });
-
-  useCommand('TOGGLE_INSTANCES_PANEL', true, {
-    handler: props.toggleInstancesList,
-  });
-
-  useCommand('TOGGLE_LAYERS_PANEL', true, {
-    handler: props.toggleLayersList,
-  });
-
-  useCommand('TOGGLE_PROJECT_PANEL', true, {
-    handler: props.toggleProjectPanel,
-  });
-
-  useCommand('TOGGLE_CONSOLE_PANEL', true, {
-    handler: props.toggleConsolePanel,
-  });
-
-  useCommand('TOGGLE_BUILD_PANEL', true, {
-    handler: props.toggleBuildPanel,
-  });
-
   useCommand('SCENE_EDITOR_UNDO', props.canUndo, {
     handler: props.undo,
   });
