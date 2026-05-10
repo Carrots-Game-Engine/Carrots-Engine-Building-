@@ -1090,27 +1090,6 @@ export default class InstancesEditor extends Component<Props, State> {
         const selectionWidth = bottomRightCorner.x - topLeftCorner.x + 1;
         const selectionHeight = bottomRightCorner.y - topLeftCorner.y + 1;
         if (selectionWidth <= 0 || selectionHeight <= 0) return null;
-
-        const tileByMask = new Array(16).fill(-1);
-        const validMaskIndexes = [];
-        const maxMaskWidth = Math.min(4, selectionWidth);
-        const maxMaskHeight = Math.min(4, selectionHeight);
-
-        for (let maskY = 0; maskY < maxMaskHeight; maskY++) {
-          for (let maskX = 0; maskX < maxMaskWidth; maskX++) {
-            const maskIndex = maskY * 4 + maskX;
-            const tileId = getTileIdFromTileCoordinates({
-              x: topLeftCorner.x + maskX,
-              y: topLeftCorner.y + maskY,
-            });
-            if (!hasTileDefinition(tileId)) continue;
-            tileByMask[maskIndex] = tileId;
-            validMaskIndexes.push(maskIndex);
-          }
-        }
-
-        if (!validMaskIndexes.length) return null;
-
         const getMaskBitDifferenceCount = (
           sourceMask: number,
           targetMask: number
@@ -1123,31 +1102,119 @@ export default class InstancesEditor extends Component<Props, State> {
             ((xorMask & 0b1000) !== 0 ? 1 : 0)
           );
         };
+        const readAutoTilePatternFromTopLeft = (
+          originX: number,
+          originY: number,
+          maxMaskWidth: number,
+          maxMaskHeight: number
+        ): ?{|
+          tileByMask: number[],
+          validMaskCount: number,
+          uniqueTileCount: number,
+        |} => {
+          const tileByMask = new Array(16).fill(-1);
+          const validMaskIndexes = [];
+          const uniqueTileIds = new Set();
 
-        for (let maskIndex = 0; maskIndex < 16; maskIndex++) {
-          if (hasTileDefinition(tileByMask[maskIndex])) continue;
-
-          let bestFallbackMaskIndex = validMaskIndexes[0];
-          let bestDistance = getMaskBitDifferenceCount(
-            maskIndex,
-            bestFallbackMaskIndex
-          );
-          for (let index = 1; index < validMaskIndexes.length; index++) {
-            const fallbackMaskIndex = validMaskIndexes[index];
-            const distance = getMaskBitDifferenceCount(
-              maskIndex,
-              fallbackMaskIndex
-            );
-            if (distance < bestDistance) {
-              bestDistance = distance;
-              bestFallbackMaskIndex = fallbackMaskIndex;
+          for (let maskY = 0; maskY < maxMaskHeight; maskY++) {
+            for (let maskX = 0; maskX < maxMaskWidth; maskX++) {
+              const maskIndex = maskY * 4 + maskX;
+              const tileId = getTileIdFromTileCoordinates({
+                x: originX + maskX,
+                y: originY + maskY,
+              });
+              if (!hasTileDefinition(tileId)) continue;
+              tileByMask[maskIndex] = tileId;
+              validMaskIndexes.push(maskIndex);
+              uniqueTileIds.add(tileId);
             }
           }
 
-          tileByMask[maskIndex] = tileByMask[bestFallbackMaskIndex];
+          if (!validMaskIndexes.length) return null;
+
+          for (let maskIndex = 0; maskIndex < 16; maskIndex++) {
+            if (hasTileDefinition(tileByMask[maskIndex])) continue;
+
+            let bestFallbackMaskIndex = validMaskIndexes[0];
+            let bestDistance = getMaskBitDifferenceCount(
+              maskIndex,
+              bestFallbackMaskIndex
+            );
+            for (let index = 1; index < validMaskIndexes.length; index++) {
+              const fallbackMaskIndex = validMaskIndexes[index];
+              const distance = getMaskBitDifferenceCount(
+                maskIndex,
+                fallbackMaskIndex
+              );
+              if (distance < bestDistance) {
+                bestDistance = distance;
+                bestFallbackMaskIndex = fallbackMaskIndex;
+              }
+            }
+
+            tileByMask[maskIndex] = tileByMask[bestFallbackMaskIndex];
+          }
+
+          return {
+            tileByMask,
+            validMaskCount: validMaskIndexes.length,
+            uniqueTileCount: uniqueTileIds.size,
+          };
+        };
+
+        if (selectionWidth >= 4 && selectionHeight >= 4) {
+          const pattern = readAutoTilePatternFromTopLeft(
+            topLeftCorner.x,
+            topLeftCorner.y,
+            4,
+            4
+          );
+          return pattern ? pattern.tileByMask : null;
         }
 
-        return tileByMask;
+        // If one tile is selected, try all possible 4x4 windows around it
+        // and keep the richest one. This makes Auto terrain feel "instant"
+        // while still allowing precise manual 4x4 authoring.
+        if (selectionWidth === 1 && selectionHeight === 1) {
+          const selectedX = topLeftCorner.x;
+          const selectedY = topLeftCorner.y;
+          let bestPattern = null;
+          let bestScore = -1;
+
+          for (let offsetY = 0; offsetY < 4; offsetY++) {
+            for (let offsetX = 0; offsetX < 4; offsetX++) {
+              const originX = selectedX - offsetX;
+              const originY = selectedY - offsetY;
+              const pattern = readAutoTilePatternFromTopLeft(
+                originX,
+                originY,
+                4,
+                4
+              );
+              if (!pattern) continue;
+
+              const score =
+                pattern.validMaskCount * 100 +
+                pattern.uniqueTileCount * 10 -
+                (Math.abs(offsetX) + Math.abs(offsetY));
+
+              if (!bestPattern || score > bestScore) {
+                bestPattern = pattern;
+                bestScore = score;
+              }
+            }
+          }
+
+          return bestPattern ? bestPattern.tileByMask : null;
+        }
+
+        const partialPattern = readAutoTilePatternFromTopLeft(
+          topLeftCorner.x,
+          topLeftCorner.y,
+          Math.min(4, selectionWidth),
+          Math.min(4, selectionHeight)
+        );
+        return partialPattern ? partialPattern.tileByMask : null;
       };
       const autoTilePatternByMask = getAutoTilePatternByMask();
       const shouldRandomizeTiles =
