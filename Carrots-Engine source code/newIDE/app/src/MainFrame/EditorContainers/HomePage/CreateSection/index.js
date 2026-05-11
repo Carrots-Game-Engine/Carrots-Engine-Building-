@@ -37,6 +37,7 @@ import {
 import { deleteCloudProject } from '../../../../Utils/GDevelopServices/Project';
 import { getDefaultRegisterGameProperties } from '../../../../Utils/UseGameAndBuildsManager';
 import EmptyAndStartingPointProjects from '../../../../ProjectCreation/EmptyAndStartingPointProjects';
+import ProjectFileList from './ProjectFileList';
 
 const carrotsFontFamily =
   '"Cairo", "Noto Sans Arabic", "Noto Sans", "Noto Sans JP", "Noto Sans KR", "Noto Sans SC", "Segoe UI", "Ubuntu", "Trebuchet MS", sans-serif';
@@ -138,6 +139,17 @@ const styles = {
     fontSize: 20,
     lineHeight: '28px',
     color: '#3d3d3c',
+  },
+  sectionSubtitle: {
+    fontFamily: carrotsFontFamily,
+    fontSize: 18,
+    lineHeight: '26px',
+    color: '#4b4b48',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  sectionBody: {
+    marginTop: 8,
   },
   carrotsButton: {
     border: '1px solid rgba(28, 28, 28, 0.16)',
@@ -635,6 +647,44 @@ const CreateSection = ({
                 </div>
               </div>
             </div>
+          </SectionRow>
+          <SectionRow>
+            <ColumnStackLayout noMargin style={styles.sectionCard}>
+              <Line noMargin justifyContent="space-between">
+                <Text size="title" noMargin style={styles.sectionTitle}>
+                  <Trans>Previous projects</Trans>
+                </Text>
+                <CarrotsActionButton
+                  onClick={onChooseProject}
+                  label={
+                    isMobile ? (
+                      <Trans>Open Project</Trans>
+                    ) : (
+                      <Trans>Open another project</Trans>
+                    )
+                  }
+                  icon={<ChevronArrowRight fontSize="small" />}
+                  disabled={!canOpen || isLoading}
+                  variant="secondary"
+                  id="browse-previous-projects"
+                />
+              </Line>
+              <Text noMargin style={styles.sectionSubtitle}>
+                <Trans>Quickly reopen the projects you worked on most recently.</Trans>
+              </Text>
+              <div style={styles.sectionBody}>
+                <ProjectFileList
+                  project={project}
+                  currentFileMetadata={currentFileMetadata}
+                  game={null}
+                  onOpenProject={onOpenProject}
+                  storageProviders={storageProviders}
+                  onDeleteCloudProject={onDeleteCloudProject}
+                  disabled={isLoading}
+                  closeProject={closeProject}
+                />
+              </div>
+            </ColumnStackLayout>
           </SectionRow>
           <SectionRow>
             <div id="carrots-home-templates-section">
