@@ -111,14 +111,14 @@ namespace gdjs {
           private _top: string = 'Z+';
           private _elevation: float = 45;
           private _rotation: float = 0;
-          private _shadowMapSize: float = 2048;
+          private _shadowMapSize: float = 1024;
           private _minimumShadowBias: float = 0;
           private _shadowNormalBias: float = 0.02;
           private _shadowRadius: float = 2;
           private _shadowStabilizationEnabled: boolean = true;
           private _shadowStabilizationStep: float = 0;
           private _distanceFromCamera: float = 1500;
-          private _frustumSize: float = 4000;
+          private _frustumSize: float = 1500;
           private _maxShadowDistance: float = 2000;
           private _cascadeSplitLambda: float = 0.78;
           private _shadowFollowLead: float = 0.45;
@@ -150,12 +150,13 @@ namespace gdjs {
           private _lightHelperEnabled: boolean = false;
           private _shadowHelperEnabled: boolean = false;
 
-          private _lights: THREE.DirectionalLight[] = [];
+          private _light: THREE.DirectionalLight;
           private _lightHelpers: Array<THREE.Mesh | null> = [];
           private _shadowRangeHelpers: Array<THREE.Mesh | null> = [];
           private _shadowRangeHelperSignatures: string[] = [];
           private _shadowMapDirty = true;
           private _shadowCameraDirty = true;
+          private _shadowCameraHelper: THREE.CameraHelper | null;
           private _cascadeRanges: Array<{ near: float; far: float }> = [
             { near: 0, far: 200 },
             { near: 200, far: 800 },
@@ -177,14 +178,9 @@ namespace gdjs {
           private _temporaryEuler = new THREE.Euler(0, 0, 0, 'ZYX');
 
           constructor() {
-            for (let i = 0; i < csmCascadeCount; i++) {
-              const light = new THREE.DirectionalLight();
-              light.castShadow = false;
-              this._lights.push(light);
-              this._lightHelpers.push(null);
-              this._shadowRangeHelpers.push(null);
-              this._shadowRangeHelperSignatures.push('');
-            }
+            this._light = new THREE.DirectionalLight();
+            this._light.castShadow = false;
+            this._shadowCameraHelper = null;
             this._top = effectData.stringParameters.top || this._top;
             this._elevation =
               effectData.doubleParameters.elevation !== undefined
@@ -308,9 +304,7 @@ namespace gdjs {
             this._setAllLightsColor(this._colorHex);
             this._setAllLightsIntensity(this._intensity);
             this._setShadowCastingEnabled(this._shadowCastingEnabled);
-            for (let i = 0; i < this._lights.length; i++) {
-              this._ensureCascadeHelpers(i);
-            }
+            this._ensureCascadeHelpers(0);
             this._updateShadowCameraDirtyState();
           }
 
@@ -382,7 +376,7 @@ namespace gdjs {
           private _buildDirectionalShadowHelperGeometry(
             cascadeIndex: integer
           ): THREE.BufferGeometry {
-            const light = this._lights[cascadeIndex];
+            const light = this._light;
             const shadowCamera = light.shadow.camera as THREE.OrthographicCamera;
             const cylinderHeight = Math.max(
               1,
@@ -415,7 +409,7 @@ namespace gdjs {
             if (!shadowHelper) {
               return;
             }
-            const light = this._lights[cascadeIndex];
+            const light = this._light;
             const shadowCamera = light.shadow.camera as THREE.OrthographicCamera;
             const shadowFar = Math.max(
               1,
@@ -444,7 +438,7 @@ namespace gdjs {
           }
 
           private _ensureCascadeHelpers(cascadeIndex: integer): void {
-            const light = this._lights[cascadeIndex];
+            const light = this._light;
             if (!light) {
               return;
             }
@@ -479,9 +473,7 @@ namespace gdjs {
               return;
             }
             this._lightHelperEnabled = enabled;
-            for (let i = 0; i < this._lights.length; i++) {
-              this._ensureCascadeHelpers(i);
-            }
+            this._ensureCascadeHelpers(0);
           }
 
           private _setShadowHelperEnabled(enabled: boolean): void {
@@ -489,32 +481,29 @@ namespace gdjs {
               return;
             }
             this._shadowHelperEnabled = enabled;
-            for (let i = 0; i < this._lights.length; i++) {
-              this._ensureCascadeHelpers(i);
-            }
+            this._ensureCascadeHelpers(0);
           }
 
           private _refreshHelpers(): void {
-            for (let cascadeIndex = 0; cascadeIndex < this._lights.length; cascadeIndex++) {
-              this._ensureCascadeHelpers(cascadeIndex);
-              const isPrimaryCascade = cascadeIndex === 0;
-              const isCascadeActive = cascadeIndex < this._activeCascadeCount;
-              const light = this._lights[cascadeIndex];
+            this._ensureCascadeHelpers(0);
+            const cascadeIndex = 0;
+            const isPrimaryCascade = cascadeIndex === 0;
+            const isCascadeActive = cascadeIndex < this._activeCascadeCount;
+            const light = this._light;
 
-              const lightHelper = this._lightHelpers[cascadeIndex];
-              if (lightHelper) {
-                lightHelper.visible = isPrimaryCascade && isCascadeActive;
-                const lightHelperMaterial =
-                  lightHelper.material as THREE.MeshBasicMaterial;
-                lightHelperMaterial.color.setHex(this._colorHex);
-              }
+            const lightHelper = this._lightHelpers[cascadeIndex];
+            if (lightHelper) {
+              lightHelper.visible = isPrimaryCascade && isCascadeActive;
+              const lightHelperMaterial =
+                lightHelper.material as THREE.MeshBasicMaterial;
+              lightHelperMaterial.color.setHex(this._colorHex);
+            }
 
-              const shadowHelper = this._shadowRangeHelpers[cascadeIndex];
-              if (shadowHelper) {
-                shadowHelper.visible =
-                  isPrimaryCascade && isCascadeActive && light.castShadow;
-                this._refreshCascadeShadowHelperGeometry(cascadeIndex);
-              }
+            const shadowHelper = this._shadowRangeHelpers[cascadeIndex];
+            if (shadowHelper) {
+              shadowHelper.visible =
+                isPrimaryCascade && isCascadeActive && light.castShadow;
+              this._refreshCascadeShadowHelperGeometry(cascadeIndex);
             }
           }
 
@@ -602,9 +591,7 @@ namespace gdjs {
 
           private _setAllLightsColor(colorHex: number): void {
             this._colorHex = colorHex;
-            for (const light of this._lights) {
-              light.color.setHex(colorHex);
-            }
+            this._light.color.setHex(colorHex);
             for (const lightHelper of this._lightHelpers) {
               if (!lightHelper) {
                 continue;
@@ -618,20 +605,10 @@ namespace gdjs {
           private _setAllLightsIntensity(intensity: float): void {
             const safeIntensity = Number.isFinite(intensity) ? intensity : 0;
             this._intensity = safeIntensity;
-            const weights = this._getCascadeIntensityWeights(
-              this._activeCascadeCount
-            );
-            for (let i = 0; i < this._lights.length; i++) {
-              const isCascadeActive = i < this._activeCascadeCount;
-              const weight =
-                isCascadeActive && weights[i] !== undefined
-                  ? weights[i]
-                  : 0;
-              this._lights[i].intensity =
-                safeIntensity * this._pipelineRealtimeMultiplier * weight;
-              this._lights[i].visible = isCascadeActive;
-              this._lights[i].target.visible = isCascadeActive;
-            }
+            this._light.intensity =
+              safeIntensity * this._pipelineRealtimeMultiplier;
+            this._light.visible = true;
+            this._light.target.visible = true;
           }
 
           private _setShadowCastingEnabled(enabled: boolean): void {
@@ -641,12 +618,9 @@ namespace gdjs {
             this._shadowCastingEnabled = enabled;
             const shouldCastShadow =
               enabled && this._pipelineAllowsRealtimeShadows;
-            for (let i = 0; i < this._lights.length; i++) {
-              const light = this._lights[i];
-              light.castShadow = shouldCastShadow && i < this._activeCascadeCount;
-              if (shouldCastShadow) {
-                light.shadow.needsUpdate = true;
-              }
+            this._light.castShadow = shouldCastShadow;
+            if (shouldCastShadow) {
+              this._light.shadow.needsUpdate = true;
             }
             if (shouldCastShadow) {
               this._updateShadowCameraDirtyState();
@@ -988,81 +962,18 @@ namespace gdjs {
             );
           }
 
-          private _updateShadowCamera(layer: gdjs.RuntimeLayer): void {
+          private _updateShadowCamera(): void {
             if (!this._shadowCameraDirty) {
               return;
             }
             this._shadowCameraDirty = false;
 
-            this._distanceFromCamera = Math.max(10, this._distanceFromCamera);
-            this._frustumSize = Math.max(64, this._frustumSize);
-            this._maxShadowDistance = Math.max(64, this._maxShadowDistance);
-            this._cascadeSplitLambda = Math.max(
-              0,
-              Math.min(1, this._cascadeSplitLambda)
-            );
-
-            this._updateCascadeRanges(layer);
-
-            const safeDistanceFromCamera = Math.max(
-              10,
-              this._distanceFromCamera
-            );
-
-            for (
-              let cascadeIndex = 0;
-              cascadeIndex < this._activeCascadeCount;
-              cascadeIndex++
-            ) {
-              const light = this._lights[cascadeIndex];
-              const cascadeFrustumSize = this._computeCascadeFrustumSize(
-                layer,
-                cascadeIndex
-              );
-              this._cascadeFrustumSizes[cascadeIndex] = cascadeFrustumSize;
-              const rangeDepth = Math.max(
-                1,
-                this._cascadeRanges[cascadeIndex].far -
-                  this._cascadeRanges[cascadeIndex].near
-              );
-              const cascadeHalfExtent = cascadeFrustumSize * 0.5;
-              const cascadeHalfDepth = rangeDepth * 0.5;
-              // Fit the full cascade volume in light depth, so shadows don't disappear
-              // on objects near the shadow frustum edges.
-              const cascadeBoundingRadius = Math.sqrt(
-                cascadeHalfExtent * cascadeHalfExtent * 2 +
-                  cascadeHalfDepth * cascadeHalfDepth
-              );
-              const depthPadding = Math.max(
-                64,
-                cascadeFrustumSize * 0.1,
-                rangeDepth * 0.2
-              );
-              const depthExtent = Math.max(
-                128,
-                cascadeBoundingRadius + depthPadding
-              );
-
-              light.shadow.camera.near = Math.max(
-                0.5,
-                safeDistanceFromCamera - depthExtent
-              );
-              light.shadow.camera.far = safeDistanceFromCamera + depthExtent;
-              light.shadow.camera.right = cascadeFrustumSize / 2;
-              light.shadow.camera.left = -cascadeFrustumSize / 2;
-              light.shadow.camera.top = cascadeFrustumSize / 2;
-              light.shadow.camera.bottom = -cascadeFrustumSize / 2;
-              light.shadow.camera.updateProjectionMatrix();
-              light.shadow.needsUpdate = true;
-            }
-
-            for (
-              let cascadeIndex = this._activeCascadeCount;
-              cascadeIndex < this._lights.length;
-              cascadeIndex++
-            ) {
-              this._cascadeFrustumSizes[cascadeIndex] = 64;
-            }
+            this._light.shadow.camera.near = 1;
+            this._light.shadow.camera.far = this._distanceFromCamera + 10000;
+            this._light.shadow.camera.right = this._frustumSize / 2;
+            this._light.shadow.camera.left = -this._frustumSize / 2;
+            this._light.shadow.camera.top = this._frustumSize / 2;
+            this._light.shadow.camera.bottom = -this._frustumSize / 2;
           }
 
           private _updateShadowMapSize(): void {
@@ -1071,30 +982,14 @@ namespace gdjs {
             }
             this._shadowMapDirty = false;
 
-            for (
-              let cascadeIndex = 0;
-              cascadeIndex < this._activeCascadeCount;
-              cascadeIndex++
-            ) {
-              const light = this._lights[cascadeIndex];
-              const cascadeMapSize = this._computeCascadeMapSize(cascadeIndex);
-              this._cascadeMapSizes[cascadeIndex] = cascadeMapSize;
+            this._light.shadow.mapSize.set(
+              this._shadowMapSize,
+              this._shadowMapSize
+            );
 
-              light.shadow.mapSize.set(cascadeMapSize, cascadeMapSize);
-
-              // Force recreation of shadow map texture.
-              light.shadow.map?.dispose();
-              light.shadow.map = null;
-              light.shadow.needsUpdate = true;
-            }
-
-            for (
-              let cascadeIndex = this._activeCascadeCount;
-              cascadeIndex < this._lights.length;
-              cascadeIndex++
-            ) {
-              this._cascadeMapSizes[cascadeIndex] = 512;
-            }
+            this._light.shadow.map?.dispose();
+            this._light.shadow.map = null;
+            this._light.shadow.needsUpdate = true;
           }
 
           private _getEffectiveShadowStabilizationStep(
@@ -1312,51 +1207,22 @@ namespace gdjs {
           }
 
           private _applyCascadeShadowTuning(cascadeIndex: integer): void {
-            const light = this._lights[cascadeIndex];
+            const light = this._light;
             const cascadeMapSize = this._cascadeMapSizes[cascadeIndex];
-            const cascadeFrustumSize = this._cascadeFrustumSizes[cascadeIndex];
-            const cascadeRange = this._cascadeRanges[cascadeIndex];
-            const texelWorldSize =
-              cascadeFrustumSize / Math.max(1, cascadeMapSize);
-            const safeMaxDistance = Math.max(64, this._maxShadowDistance);
-            const depthRatio = Math.max(
-              0.05,
-              Math.min(1, cascadeRange.far / safeMaxDistance)
-            );
-            const qualityScale = Math.max(
-              0.35,
-              Math.min(2, this._pipelineShadowQualityScale)
-            );
-            const qualityBiasMultiplier =
-              qualityScale < 1
-                ? 1 + (1 - qualityScale) * 0.45
-                : 1 / (1 + (qualityScale - 1) * 0.25);
-            const automaticBias = Math.max(
-              0.00002,
-              texelWorldSize * (0.00035 + depthRatio * 0.00055)
-            );
-            const baseBias = Math.max(this._minimumShadowBias, automaticBias);
+
+            const biasMultiplier =
+              cascadeMapSize < 1024
+                ? 2
+                : cascadeMapSize < 2048
+                  ? 1.25
+                  : 1;
+
             light.shadow.bias =
-              -baseBias * qualityBiasMultiplier * (1 + depthRatio * 1.65);
-
-            const baseNormalBias = Math.max(0, this._shadowNormalBias);
-            const automaticNormalBias =
-              texelWorldSize * (0.012 + depthRatio * 0.028);
-            light.shadow.normalBias = Math.max(
-              baseNormalBias * (1 + depthRatio * 0.45),
-              automaticNormalBias
-            );
-
-            const baseRadius = Math.max(0, this._shadowRadius);
-            const radiusMultiplier =
-              0.8 +
-              depthRatio * 0.65 +
-              (qualityScale < 1 ? (1 - qualityScale) * 0.4 : 0);
-            light.shadow.radius = baseRadius * radiusMultiplier;
+              -this._minimumShadowBias * biasMultiplier;
           }
 
           private _applyManualShadowTuning(cascadeIndex: integer): void {
-            const light = this._lights[cascadeIndex];
+            const light = this._light;
             light.shadow.bias = -Math.max(0, this._minimumShadowBias);
             light.shadow.normalBias = Math.max(0, this._shadowNormalBias);
             light.shadow.radius = Math.max(0, this._shadowRadius);
@@ -1709,16 +1575,14 @@ namespace gdjs {
 
             const shouldCastShadow =
               this._shadowCastingEnabled && this._pipelineAllowsRealtimeShadows;
-            for (let i = 0; i < this._lights.length; i++) {
-              const light = this._lights[i];
-              const isCascadeActive = i < this._activeCascadeCount;
-              const shouldCascadeCastShadow =
-                shouldCastShadow && isCascadeActive;
-              if (light.castShadow !== shouldCascadeCastShadow) {
-                light.castShadow = shouldCascadeCastShadow;
-                if (shouldCascadeCastShadow) {
-                  light.shadow.needsUpdate = true;
-                }
+            const light = this._light;
+            const isCascadeActive = 0 < this._activeCascadeCount;
+            const shouldCascadeCastShadow =
+              shouldCastShadow && isCascadeActive;
+            if (light.castShadow !== shouldCascadeCastShadow) {
+              light.castShadow = shouldCascadeCastShadow;
+              if (shouldCascadeCastShadow) {
+                light.shadow.needsUpdate = true;
               }
             }
 
@@ -1788,12 +1652,9 @@ namespace gdjs {
               return false;
             }
 
-            for (let i = 0; i < this._lights.length; i++) {
-              const light = this._lights[i];
-              this._ensureCascadeHelpers(i);
-              scene.add(light);
-              scene.add(light.target);
-            }
+            this._ensureCascadeHelpers(0);
+            scene.add(this._light);
+            scene.add(this._light.target);
 
             this._hadPreviousCameraPosition = false;
             this._staticAnchorInitialized = false;
@@ -1810,11 +1671,8 @@ namespace gdjs {
               return false;
             }
 
-            for (let i = 0; i < this._lights.length; i++) {
-              const light = this._lights[i];
-              scene.remove(light);
-              scene.remove(light.target);
-            }
+            scene.remove(this._light);
+            scene.remove(this._light.target);
 
             this._isEnabled = false;
             return true;
@@ -1850,44 +1708,39 @@ namespace gdjs {
               attachedObjectForDirection
             );
 
-            for (
-              let cascadeIndex = 0;
-              cascadeIndex < this._activeCascadeCount;
-              cascadeIndex++
-            ) {
-              const light = this._lights[cascadeIndex];
-              const stabilizationStep = this._shadowCastingEnabled
-                ? this._getEffectiveShadowStabilizationStep(cascadeIndex)
-                : 0;
-              const [stabilizedX, stabilizedY, stabilizedZ] =
-                this._stabilizeAnchorInLightSpace(
-                  anchorX,
-                  anchorY,
-                  anchorZ,
-                  stabilizationStep,
-                  lightSpaceBasis
-                );
-
-              this._applyCascadeTransform(
-                light,
-                stabilizedX,
-                stabilizedY,
-                stabilizedZ,
-                attachedObjectForDirection
+            const cascadeIndex = 0;
+            const light = this._light;
+            const stabilizationStep = this._shadowCastingEnabled
+              ? this._getEffectiveShadowStabilizationStep(cascadeIndex)
+              : 0;
+            const [stabilizedX, stabilizedY, stabilizedZ] =
+              this._stabilizeAnchorInLightSpace(
+                anchorX,
+                anchorY,
+                anchorZ,
+                stabilizationStep,
+                lightSpaceBasis
               );
 
-              if (
-                this._shadowCastingEnabled &&
-                this._pipelineAllowsRealtimeShadows
-              ) {
-                if (this._shadowAutoTuningEnabled) {
-                  this._applyCascadeShadowTuning(cascadeIndex);
-                } else {
-                  this._applyManualShadowTuning(cascadeIndex);
-                }
-              }
+            this._applyCascadeTransform(
+              light,
+              stabilizedX,
+              stabilizedY,
+              stabilizedZ,
+              attachedObjectForDirection
+            );
 
+            if (
+              this._shadowCastingEnabled &&
+              this._pipelineAllowsRealtimeShadows
+            ) {
+              if (this._shadowAutoTuningEnabled) {
+                this._applyCascadeShadowTuning(cascadeIndex);
+              } else {
+                this._applyManualShadowTuning(cascadeIndex);
+              }
             }
+
             this._refreshHelpers();
           }
           updateDoubleParameter(parameterName: string, value: number): void {

@@ -1,58 +1,112 @@
-/>
-</p>
+<div align="center"><!-- Add your logo here if available --><!-- <img src="Carrots-Engine source code/newIDE/Gemini_Generated_Image_bo6634bo6634bo66.png" alt="Carrots Engine Logo" width="200" /> -->🥕 Carrots Engine
 
-## Key Features (Latest Engine Highlights)
+A Powerful, Easy-to-Use 2D & 3D Game Engine
 
-- 2D, 3D, and multiplayer game creation with a no-code event system and modular behaviors.
-- Scene3D extension with base 3D behavior, 3D model objects, and level-of-detail (LOD) management.
-- Advanced 3D lighting pipeline with professional shader upgrades and adaptive lighting.
-- Spot, Point, and Directional lights with improved shadow stability and performance.
-- Shadow system controls for cascaded shadows and high-resolution shadow maps (up to 4096).
-- Post-processing stack: Screen Space Reflections (SSR), Screen Space Ambient Occlusion (SSAO), Depth of Field, Bloom, Volumetric Fog, Vignette, and Tone Mapping.
-- Post-processing quality presets and adaptive 3D quality targeting stable 60 FPS.
-- PBR material behavior with AO/albedo support and SSR roughness integration.
-- Runtime lightmap system integrated with ambient lighting and tone mapping.
-- 3D physics with Jolt Physics, including rigid bodies, joints, and ragdoll support.
-- Lighting effects and behaviors including RimLight and enhanced FlickeringLight controls.
-- Editor workflow improvements for 3D transforms and snapping.
+"Latest Release" (#) • "Report a Bug" (#) • "Request a Feature" (#)
 
-## Getting Started
+License: MIT
+PRs Welcome
 
-- Download the app: https://carrots.odoo.com/
-- Contribute to the editor or engine: newIDE/README.md
-- Read the architecture overview: Core/GDevelop-Architecture-Overview.md
+«Built on the solid foundation of GDevelop Core, supercharged with modern graphics, advanced animations, and pro tools for everyone.»
 
-## Technical Architecture
+</div>---
 
-Carrots Engine is composed of an editor, a game engine, and a set of extensions.
+📖 Welcome to Carrots Engine
 
-| Directory     | Description |
-| ------------- | ----------- |
-| `Core`        | Core classes describing the game structure and tools used by the editor and the engine. |
-| `GDJS`        | The game engine, written in TypeScript, using PixiJS and Three.js for 2D and 3D rendering (WebGL). |
-| `GDevelop.js` | Bindings of `Core`, `GDJS`, and `Extensions` to JavaScript (with WebAssembly), used by the IDE. |
-| `newIDE`      | The game editor, written in JavaScript with React, Electron, PixiJS, and Three.js. |
-| `Extensions`  | Built-in extensions providing objects, behaviors, and new features, including physics engines running in WebAssembly (Box2D or Jolt for 3D). |
+Carrots Engine is a free, open-source 2D and 3D game engine designed to be fast, simple, and powerful.
 
-## Links
+Built on the solid base of GDevelop Core, it expands the workflow with professional-grade tools like Blueprint scripting, PBR materials, advanced animation systems, and Git integration, helping indie developers and studios bring their biggest ideas to life.
 
-- Website: https://carrots.odoo.com/
-- GitHub: https://github.com/Carrotstudio0/Carrots-Engine
-- Issues: https://github.com/Carrotstudio0/Carrots-Engine/issues
-- Discussions: https://github.com/Carrotstudio0/Carrots-Engine/discussions
+---
 
-## License
-  
-The Core library, native and HTML5 game engines, IDE, and all extensions (including the Core, GDJS, newIDE, and Extensions directories) are derived from the GDevelop project source code, originally distributed under the MIT License by the GDevelop team.
+✨ Features
 
-This project is an independent implementation built upon that codebase and is not a fork of the original repository. As such, it is not connected to, maintained by, or updated in sync with the official GDevelop project. All subsequent modifications, maintenance, and development are carried out independently.
+🎨 Beautiful Graphics & Rendering
 
-Full credit is given to the GDevelop team for their original work, in accordance with the terms and spirit of the MIT License.
-- The name, Carrots Engine, and its logo are the exclusive property of Carrots Team.
+- Advanced Shading: Full shader system, Toon Shaders, and a robust material system with PBR materials.
+- Environment: Realistic physical lighting and a beautiful water system.
+- 2D Enhancements: Normal map support for richer 2D sprites, plus skew support.
+- Maximum FPS: Built-in LOD system and FSR for smoother performance.
+- Core Upgrades: Major graphics upgrades and rendering improvements.
 
-Games exported with Carrots Engine are based on the Carrots Engine game engine (see `Core` and `GDJS` folders): this engine is distributed under the MIT license so that you can distribute, sell or do anything with the games you create. In particular, you are not forced to make your game open-source.
+🏃‍♂️ Next-Level Animations & Rigging
 
-Help us spread the word about Carrots Engine by starring the repository on GitHub.
+- Smart Animation: A brand-new animation system powered by an animation state machine and seamless animation blending.
+- Cinematics & Tracking: Timeline system for cutscenes and a path tracker for complex movements.
+- Rigging: Built-in bone editor with IK support for realistic character movement.
 
+🛠️ Pro Editor Tools & Workflow
 
+- Code Your Way: Blueprint graph for visual node-based logic, alongside full TypeScript support.
+- World Building: Scene folder system, child object system (parenting), and built-in 3D objects like cube, plane, sphere, capsule, and cylinder.
+- Smooth Workflow: Live reload during preview, snap transform tools, and local/world transform modes.
+- Professional Management: Built-in Git version control integration, GitHub workflow integration, and a powerful console log system.
+- Editor Polish: Improved workflow, better asset and object organization, and major inspector improvements.
 
+💥 Audio, Effects & Extensions
+
+- Visual Magic: Advanced particle editor for stunning VFX.
+- Sound Design: Dedicated audio object system with enhanced 3D audio workflow.
+- More Power: A variety of new extensions to expand your game’s capabilities.
+
+🚀 Performance & Optimizations
+
+- Next-Gen Speed: Multi-thread support via Web Workers Beta for heavy processing.
+- Efficiency: Deep runtime optimizations, performance improvements, and rendering optimizations.
+
+---
+
+🏗️ Built on GDevelop Core
+
+Because Carrots Engine is built on GDevelop, you instantly get all these core features out of the box:
+
+<details>
+<summary><b>✨ Click here to see the Core Features</b></summary>- Logic: Easy event-based visual scripting.
+- Worlds: Build deep 2D games and 3D environments.
+- Systems: Built-in physics, lighting, and audio.
+- Level Design: Simple tilemaps and pathfinding for enemies.
+- Export Anywhere: Publish to Web (HTML5), PC (Windows/macOS/Linux), and Mobile (iOS/Android).
+
+</details>---
+
+🔮 Roadmap
+
+We are always pushing boundaries. Here is what we are planning to add in the future:
+
+- [ ] Next-Gen Graphics: WebGPU support for maximum rendering power.
+- [ ] 3D Workflow: FBX support for smoother 3D model importing.
+- [ ] Networking: RealTimeMP multiplayer for fast online games.
+- [ ] Advanced 3D Modeling: CSG Box 3D, CSG Combiner, and Flip Face tools.
+- [ ] Level Generation: Room Generator system for quick level building.
+- [ ] UI & Coding: Full editor redesign and an advanced text editor.
+
+---
+
+🎮 Getting Started
+
+Ready to jump in and start making games?
+
+1. Go to the Releases page.
+2. Download the latest version for your computer.
+3. Extract the folder and run the engine — no installation needed!
+
+---
+
+⚖️ Credits & Acknowledgements
+
+«Built on GDevelop Core:
+The core code of this engine, including GDJS and newIDE, comes from the GDevelop project and is originally shared under the MIT License by the GDevelop team.
+
+This project is an independent creation built on that code. It is not connected to, or maintained by, the official GDevelop project. All new features and updates are developed independently by the Carrots Team.»
+
+A huge thank you to the GDevelop team for their original hard work.
+
+---
+
+❤️ Thank You
+
+A huge thank you to the Carrots Team, our families, and our friends for their endless support.
+
+<div align="center">
+  <b>Made with ❤️ for the Game Dev Community</b>
+</div>
