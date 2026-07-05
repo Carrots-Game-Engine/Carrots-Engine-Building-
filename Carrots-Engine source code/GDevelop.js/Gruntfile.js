@@ -2,7 +2,6 @@
 // without Grunt, and called from package.json.
 module.exports = function (grunt) {
   const fs = require('fs');
-  const path = require('path');
   const isWin = /^win/.test(process.platform);
   const useMinGW = grunt.option('use-MinGW') || false;
 
@@ -13,7 +12,9 @@ module.exports = function (grunt) {
     'debug-assertions',
     'debug-sanitizers',
   ];
-  const variant = grunt.option('variant') || (grunt.option('dev') ? 'dev' : 'release');
+
+  const variant =
+    grunt.option('variant') || (grunt.option('dev') ? 'dev' : 'release');
 
   if (variant && possibleVariants.indexOf(variant) === -1) {
     console.error(
@@ -35,6 +36,7 @@ module.exports = function (grunt) {
   // Use more specific paths on Windows
   if (isWin) {
     let makeProgram = '';
+
     if (useMinGW) {
       // Use make from MinGW
       if (!fs.existsSync('C:\\MinGW\\bin\\mingw32-make.exe')) {
@@ -43,18 +45,18 @@ module.exports = function (grunt) {
         );
         return;
       }
+
       const mingwBinary = 'C:\\MinGW\\bin\\mingw32-make';
+
       cmakeGeneratorArgs = ['-G "MinGW Makefiles"'];
       makeProgram = mingwBinary;
     } else {
-      // Use Ninja from PATH (GitHub Actions installs it with Chocolatey)
-const ninjaBinary = 'ninja';
+      // Use Ninja from system PATH
+      const ninjaBinary = 'ninja';
 
-cmakeGeneratorArgs = [
-  '-G "Ninja"',
-];
+      cmakeGeneratorArgs = ['-G "Ninja"'];
 
-makeProgram = ninjaBinary;;
+      makeProgram = ninjaBinary;
     }
 
     makeBinary = `emmake "${makeProgram}"`;
@@ -82,6 +84,7 @@ makeProgram = ninjaBinary;;
         },
       },
     },
+
     shell: {
       // Launch CMake if needed
       cmake: {
@@ -92,9 +95,9 @@ makeProgram = ninjaBinary;;
           [
             ...cmakeGeneratorArgs,
             '../..',
-            // Disable link time optimizations for slightly faster build time.
             variant ? '-DGDEVELOPJS_BUILD_VARIANT=' + variant : '',
           ].join(' '),
+
         options: {
           execOptions: {
             cwd: buildPath,
@@ -103,14 +106,17 @@ makeProgram = ninjaBinary;;
           },
         },
       },
-      // Generate glue.cpp and glue.js file using Bindings.idl, and patch them
+
+      // Generate glue.cpp and glue.js file using Bindings.idl
       updateGDBindings: {
         src: 'Bindings/Bindings.idl',
         command: 'node update-bindings.js',
       },
+
       // Compile GDevelop with emscripten
       make: {
         command: makeBinary + ' ' + makeArgs.join(' '),
+
         options: {
           execOptions: {
             cwd: buildPath,
@@ -118,34 +124,41 @@ makeProgram = ninjaBinary;;
           },
         },
       },
+
       // Copy the library to newIDE
       copyToNewIDE: {
         command: 'node scripts/copy-to-newIDE.js',
+
         options: {
           execOptions: {
             cwd: __dirname,
           },
         },
       },
-      // Generate typings from the Bindings.idl
+
       generateFlowTypes: {
         command: 'node scripts/generate-types.js',
+
         options: {
           execOptions: {
             cwd: __dirname,
           },
         },
       },
+
       generateTSTypes: {
         command: 'node scripts/generate-dts.mjs',
+
         options: {
           execOptions: {
             cwd: __dirname,
           },
         },
       },
+
       syncVersions: {
         command: 'node scripts/sync-versions.js',
+
         options: {
           execOptions: {
             cwd: __dirname,
@@ -153,8 +166,10 @@ makeProgram = ninjaBinary;;
         },
       },
     },
+
     clean: {
       options: { force: true },
+
       build: {
         src: [
           buildPath,
@@ -173,12 +188,14 @@ makeProgram = ninjaBinary;;
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-newer');
   grunt.loadNpmTasks('grunt-mkdir');
+
   grunt.registerTask('build:raw', [
     'mkdir:embuild',
     'shell:cmake',
     'newer:shell:updateGDBindings',
     'shell:make',
   ]);
+
   grunt.registerTask('build', [
     'shell:syncVersions',
     'build:raw',
