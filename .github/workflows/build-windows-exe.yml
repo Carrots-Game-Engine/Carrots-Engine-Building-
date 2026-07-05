@@ -140,7 +140,11 @@ jobs:
         run: |
           emcc --version
           emcmake cmake --version
-
+      - name: Clean previous build
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force "Carrots-Engine source code/Binaries/embuild" -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force "Carrots-Engine source code/Binaries/Output/Release_Emscripten" -ErrorAction SilentlyContinue
       - name: Build GDevelop.js
         working-directory: "Carrots-Engine source code/GDevelop.js"
         shell: pwsh
