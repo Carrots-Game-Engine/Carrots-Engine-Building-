@@ -30,7 +30,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+        # ✅ تم حذف: cache: 'npm'
     
     - name: Setup Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
