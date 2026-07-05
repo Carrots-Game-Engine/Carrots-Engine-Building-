@@ -10,7 +10,6 @@ on:
 env:
   NODE_VERSION: '18'
   PYTHON_VERSION: '3.11'
-  EMSCRIPTEN_VERSION: 'latest'
 
 jobs:
   build-windows:
@@ -48,7 +47,11 @@ jobs:
           Write-Host "ninja location:" (Get-Command ninja -ErrorAction SilentlyContinue).Path
           ninja --version
           cmake --version
-          emcc --version || Write-Host "emcc not found yet"
+          try {
+            emcc --version
+          } catch {
+            Write-Host "emcc not found yet" -ForegroundColor Yellow
+          }
         shell: pwsh
 
       - name: Export CMAKE_MAKE_PROGRAM (point to installed ninja)
@@ -58,29 +61,24 @@ jobs:
             Write-Host "❌ ninja was not found on PATH" -ForegroundColor Red
             exit 1
           }
-          Write-Host "CMAKE_MAKE_PROGRAM=$ninja" >> $env:GITHUB_ENV
+          Add-Content -Path $env:GITHUB_ENV -Value "CMAKE_MAKE_PROGRAM=$ninja"
           Write-Host "✓ Exported CMAKE_MAKE_PROGRAM=$ninja" -ForegroundColor Green
         shell: pwsh
 
-      # ========== EMSCRIPTEN SETUP ==========
-      - name: Setup Emscripten SDK (Official)
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: ${{ env.EMSCRIPTEN_VERSION }}
-          actions-cache-folder: 'emsdk-cache'
-
-      - name: Verify Emscripten
-        run: |
-          emcc --version
-          Write-Host "✓ Emscripten SDK installed and verified" -ForegroundColor Green
-        shell: pwsh
+      # ========== NOTE: EMSCRIPTEN REMOVED ==========
+      # Emscripten setup is not needed for building the Windows Electron EXE
+      # and can cause long installs or platform-specific failures on windows-latest.
 
       # ========== INSTALL DEPENDENCIES ==========
       - name: Install GDJS dependencies
         working-directory: 'Carrots-Engine source code/GDJS'
         run: |
           Write-Host "Installing GDJS dependencies..." -ForegroundColor Cyan
-          npm install --legacy-peer-deps
+          if (Test-Path package-lock.json) {
+            npm ci --legacy-peer-deps
+          } else {
+            npm install --legacy-peer-deps
+          }
           if ($LASTEXITCODE -ne 0) {
             Write-Host "❌ GDJS dependencies installation failed" -ForegroundColor Red
             exit 1
@@ -92,7 +90,11 @@ jobs:
         working-directory: 'Carrots-Engine source code/GDevelop.js'
         run: |
           Write-Host "Installing GDevelop.js dependencies..." -ForegroundColor Cyan
-          npm install --legacy-peer-deps
+          if (Test-Path package-lock.json) {
+            npm ci --legacy-peer-deps
+          } else {
+            npm install --legacy-peer-deps
+          }
           if ($LASTEXITCODE -ne 0) {
             Write-Host "❌ GDevelop.js dependencies installation failed" -ForegroundColor Red
             exit 1
@@ -104,7 +106,11 @@ jobs:
         working-directory: 'Carrots-Engine source code/newIDE/electron-app'
         run: |
           Write-Host "Installing Electron app dependencies..." -ForegroundColor Cyan
-          npm install --legacy-peer-deps
+          if (Test-Path package-lock.json) {
+            npm ci --legacy-peer-deps
+          } else {
+            npm install --legacy-peer-deps
+          }
           if ($LASTEXITCODE -ne 0) {
             Write-Host "❌ Electron app dependencies installation failed" -ForegroundColor Red
             exit 1
