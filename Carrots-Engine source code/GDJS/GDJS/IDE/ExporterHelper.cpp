@@ -1478,52 +1478,63 @@ bool ExporterHelper::ExportTypeScriptProjectScripts(
             ? scriptElement.GetChild("includePosition").GetStringValue()
             : "last";
     const bool includeFirst = includePosition == "first";
+const bool includeFirst = includePosition == "first";
 
-    gd::String contextKind =
-        scriptElement.HasChild("contextKind")
-            ? scriptElement.GetChild("contextKind").GetStringValue()
-            : "project";
-    if (contextKind != "scene" && contextKind != "object" &&
-        contextKind != "behavior" && contextKind != "project") {
-      contextKind = "project";
-    }
-    const gd::String sceneName =
-        scriptElement.HasChild("sceneName")
-            ? scriptElement.GetChild("sceneName").GetStringValue()
-            : "";
-    const gd::String objectName =
-        scriptElement.HasChild("objectName")
-            ? scriptElement.GetChild("objectName").GetStringValue()
-            : "";
-    const gd::String behaviorName =
-        scriptElement.HasChild("behaviorName")
-            ? scriptElement.GetChild("behaviorName").GetStringValue()
-            : "";
+gd::String contextKind =
+    scriptElement.HasChild("contextKind")
+        ? scriptElement.GetChild("contextKind").GetStringValue()
+        : "project";
 
-    modules.push_back(ProjectTypeScriptModule{
-    uniqueModuleId,
-    transpiledCode,
-    includeFirst,
-    contextKind,
-    sceneName,
-    objectName,
-    behaviorName
-});
+if (contextKind != "scene" && contextKind != "object" &&
+    contextKind != "behavior" && contextKind != "project") {
+  contextKind = "project";
+}
+
+const gd::String sceneName =
+    scriptElement.HasChild("sceneName")
+        ? scriptElement.GetChild("sceneName").GetStringValue()
+        : "";
+
+const gd::String objectName =
+    scriptElement.HasChild("objectName")
+        ? scriptElement.GetChild("objectName").GetStringValue()
+        : "";
+
+const gd::String behaviorName =
+    scriptElement.HasChild("behaviorName")
+        ? scriptElement.GetChild("behaviorName").GetStringValue()
+        : "";
+
+ProjectTypeScriptModule module;
+module.moduleId = uniqueModuleId;
+module.transpiledCode = transpiledCode;
+module.includeFirst = includeFirst;
+module.contextKind = contextKind;
+module.sceneName = sceneName;
+module.objectName = objectName;
+module.behaviorName = behaviorName;
+
+modules.push_back(module);
 
 if (includeFirst) {
   firstModuleIds.push_back(uniqueModuleId);
 } else {
   lastModuleIds.push_back(uniqueModuleId);
 }
+} // إغلاق الحلقة أو البلوك الحالي
 
-  if (modules.empty()) return true;
+if (modules.empty()) return true;
 
-  fs.MkDir(outputDir);
-  const gd::String runtimeFilePath = outputDir + "/project-ts-modules-runtime.js";
-  const gd::String definitionsFilePath =
-      outputDir + "/project-ts-modules-definitions.js";
-  const gd::String firstBootstrapFilePath =
-      outputDir + "/project-ts-modules-bootstrap-first.js";
+fs.MkDir(outputDir);
+
+const gd::String runtimeFilePath =
+    outputDir + "/project-ts-modules-runtime.js";
+
+const gd::String definitionsFilePath =
+    outputDir + "/project-ts-modules-definitions.js";
+
+const gd::String firstBootstrapFilePath =
+    outputDir + "/project-ts-modules-bootstrap-first.js";
   const gd::String lastBootstrapFilePath =
       outputDir + "/project-ts-modules-bootstrap-last.js";
   const gd::String lifecycleFilePath =
