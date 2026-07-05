@@ -1,4 +1,4 @@
-name: Build Windows EXE
+Name: Build Windows EXE
 
 on:
   push:
@@ -11,6 +11,7 @@ env:
   NODE_VERSION: '18'
   PYTHON_VERSION: '3.11'
   LIBGD_MAX_SIZE_MIB: '8'
+
 jobs:
   build-windows:
     name: Build Carrots Engine for Windows
@@ -65,9 +66,23 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "CMAKE_MAKE_PROGRAM=$ninja"
           Write-Host "✓ Exported CMAKE_MAKE_PROGRAM=$ninja" -ForegroundColor Green
 
-      # ========== NOTE: EMSCRIPTEN REMOVED ==========
-      # Emscripten setup is not needed for building the Windows Electron EXE
-      # and can cause long installs or platform-specific failures on windows-latest.
+      # ========== EMSCRIPTEN: SETUP & VERIFY ==========
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.45
+
+      - name: Verify Emscripten
+        shell: pwsh
+        run: |
+          emcc --version
+          emcmake cmake --version
+
+      - name: Clean previous build
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force "Carrots-Engine source code/Binaries/embuild" -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force "Carrots-Engine source code/Binaries/Output/Release_Emscripten" -ErrorAction SilentlyContinue
 
       # ========== INSTALL DEPENDENCIES ==========
       - name: Install GDJS dependencies
@@ -102,6 +117,22 @@ jobs:
           }
           Write-Host "✓ GDevelop.js dependencies installed" -ForegroundColor Green
 
+      - name: Install newIDE app dependencies
+        working-directory: "Carrots-Engine source code/newIDE/app"
+        shell: pwsh
+        run: |
+          Write-Host "Installing newIDE app dependencies..." -ForegroundColor Cyan
+          if (Test-Path package-lock.json) {
+            npm ci --legacy-peer-deps
+          } else {
+            npm install --legacy-peer-deps
+          }
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "❌ newIDE app dependencies installation failed" -ForegroundColor Red
+            exit 1
+          }
+          Write-Host "✓ newIDE app dependencies installed" -ForegroundColor Green
+
       - name: Install Electron app dependencies
         working-directory: "Carrots-Engine source code/newIDE/electron-app"
         shell: pwsh
@@ -130,24 +161,6 @@ jobs:
             exit 1
           }
           Write-Host "✓ GDJS built successfully" -ForegroundColor Green
-
-      # ========== EMSCRIPTEN: setup & verify ==========
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 3.1.45
-
-      - name: Verify Emscripten
-        shell: pwsh
-        run: |
-          emcc --version
-          emcmake cmake --version
-
-      - name: Clean previous build
-        shell: pwsh
-        run: |
-          Remove-Item -Recurse -Force "Carrots-Engine source code/Binaries/embuild" -ErrorAction SilentlyContinue
-          Remove-Item -Recurse -Force "Carrots-Engine source code/Binaries/Output/Release_Emscripten" -ErrorAction SilentlyContinue
 
       - name: Build GDevelop.js
         working-directory: "Carrots-Engine source code/GDevelop.js"
@@ -180,63 +193,9 @@ jobs:
         run: |
           $distPath = 'Carrots-Engine source code/newIDE/electron-app/dist'
           Write-Host "Checking for EXE files in: $distPath" -ForegroundColor Cyan
-
-          $exeFiles = Get-ChildItem -Path $distPath -Filter '*.exe' -Recurse -ErrorAction SilentlyContinue
-
-          if ($null -eq $exeFiles -or $exeFiles.Count -eq 0) {
-            Write-Host "❌ No EXE files found!" -ForegroundColor Red
-            Write-Host "Available files:" -ForegroundColor Yellow
-            Get-ChildItem -Path $distPath -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  - $_" }
-            exit 1
+          if (Test-Path $distPath) {
+              Get-ChildItem -Path $distPath -Filter *.exe -Recurse
+          } else {
+              Write-Host "❌ Dist directory does not exist!" -ForegroundColor Red
+              exit 1
           }
-
-          Write-Host "✓ Found $($exeFiles.Count) EXE file(s):" -ForegroundColor Green
-          $exeFiles | ForEach-Object {
-            $sizeMB = [Math]::Round($_.Length/1MB, 2)
-            Write-Host "  ✓ $($_.Name) ($sizeMB MB)" -ForegroundColor Green
-          }
-
-      # ========== UPLOAD ARTIFACTS ==========
-      - name: Upload EXE artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: carrots-engine-exe
-          path: "Carrots-Engine source code/newIDE/electron-app/dist/**/*.exe"
-          retention-days: 30
-          compression-level: 9
-
-      - name: Upload build logs (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs-debug
-          path: |
-            Carrots-Engine source code/*/npm-debug.log
-            Carrots-Engine source code/*/*.log
-            Carrots-Engine source code/*/*/npm-debug.log
-          retention-days: 7
-
-      # ========== FINAL SUMMARY ==========
-      - name: Build Success Summary
-        if: success()
-        shell: pwsh
-        run: |
-          Write-Host ""
-          Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Green
-          Write-Host "║    ✓ BUILD COMPLETED SUCCESSFULLY!             ║" -ForegroundColor Green
-          Write-Host "║    Carrots Engine Windows EXE Ready            ║" -ForegroundColor Green
-          Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Green
-          Write-Host ""
-
-      - name: Build Failure Summary
-        if: failure()
-        shell: pwsh
-        run: |
-          Write-Host ""
-          Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Red
-          Write-Host "║    ❌ BUILD FAILED                              ║" -ForegroundColor Red
-          Write-Host "║    Check logs above for details                ║" -ForegroundColor Red
-          Write-Host "║    Build logs uploaded as artifacts            ║" -ForegroundColor Red
-          Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Red
-          Write-Host ""
