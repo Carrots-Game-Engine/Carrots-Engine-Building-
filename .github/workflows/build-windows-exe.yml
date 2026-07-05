@@ -40,9 +40,19 @@ jobs:
           choco install cmake ninja git -y --no-progress
           Write-Host "✓ CMake, Ninja, and Git installed successfully" -ForegroundColor Green
         shell: pwsh
-
       # ========== DIAGNOSTICS & EXPORT NINJA ==========
-      - name: Diagnostic: verify tools
+        - name: "Diagnostic verify tools"      
+        shell: pwsh
+        run: |
+          Write-Host "ninja location:"
+          (Get-Command ninja -ErrorAction SilentlyContinue).Path
+          ninja --version
+          cmake --version
+          try {
+            emcc --version
+          } catch {
+            Write-Host "emcc not found yet"
+          }
         run: |
           Write-Host "ninja location:" (Get-Command ninja -ErrorAction SilentlyContinue).Path
           ninja --version
