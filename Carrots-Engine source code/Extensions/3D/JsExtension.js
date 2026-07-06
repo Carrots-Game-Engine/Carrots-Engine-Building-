@@ -3670,8 +3670,42 @@ module.exports = {
         objectContent.wallThickness = Math.max(0, parseFloat(newValue) || 0);
         return true;
       }
+      if (
+        propertyName === 'collisionLayer' ||
+        propertyName === 'collisionMask'
+      ) {
+        objectContent[propertyName] = Math.max(
+          0,
+          Math.floor(parseFloat(newValue) || 0)
+        );
+        return true;
+      }
+      if (propertyName === 'collisionPriority') {
+        objectContent.collisionPriority = parseFloat(newValue) || 0;
+        return true;
+      }
+      if (propertyName === 'smoothingAngle') {
+        objectContent.smoothingAngle = Math.max(
+          0,
+          Math.min(180, parseFloat(newValue) || 0)
+        );
+        return true;
+      }
       if (propertyName === 'csgMode') {
         objectContent.csgMode = newValue === 'Combined' ? 'Combined' : 'Box';
+        return true;
+      }
+      if (propertyName === 'csgRole') {
+        if (newValue !== 'Solid' && newValue !== 'Room' && newValue !== 'Cutter') {
+          return false;
+        }
+        objectContent.csgRole = newValue;
+        objectContent.roomMode = newValue === 'Room';
+        objectContent.facesInward = newValue === 'Room';
+        objectContent.csgOperation = newValue === 'Cutter' ? 'Subtract' : 'Union';
+        if (newValue === 'Room') {
+          objectContent.generateCollision = true;
+        }
         return true;
       }
       if (propertyName === 'csgOperation') {
@@ -3715,7 +3749,9 @@ module.exports = {
         propertyName === 'isReceivingShadow' ||
         propertyName === 'roomMode' ||
         propertyName === 'facesInward' ||
-        propertyName === 'generateCollision'
+        propertyName === 'generateCollision' ||
+        propertyName === 'calculateTangents' ||
+        propertyName === 'autoSmooth'
       ) {
         objectContent[propertyName] = newValue === '1' || newValue === 'true';
         if (propertyName === 'roomMode' && objectContent[propertyName]) {
@@ -3732,13 +3768,192 @@ module.exports = {
       const objectContent = this.content;
 
       objectProperties
+        .getOrCreate('csgRole')
+        .setValue(
+          objectContent.csgRole ||
+            (objectContent.roomMode
+              ? 'Room'
+              : objectContent.csgOperation === 'Subtract'
+                ? 'Cutter'
+                : 'Solid')
+        )
+        .setType('choice')
+        .addChoice('Solid', _('Solid builder box'))
+        .addChoice('Room', _('Room volume'))
+        .addChoice('Cutter', _('Door/window cutter'))
+        .setLabel(_('CSG role'))
+        .setDescription(
+          _(
+            'Choose whether this box adds level geometry, creates an inward-facing room volume, or cuts doors, windows and openings from other boxes.'
+          )
+        )
+        .setGroup(_('CSG - Build'));
+
+      objectProperties
+        .getOrCreate('csgOperation')
+        .setValue(objectContent.csgOperation || 'Union')
+        .setType('choice')
+        .addChoice('Union', _('Union'))
+        .addChoice('Subtract', _('Subtract'))
+        .addChoice('Intersect', _('Intersect'))
+        .setLabel(_('Boolean operation'))
+        .setDescription(
+          _(
+            'Advanced boolean operation used when this box is combined with other CSG boxes. The role above sets the common values automatically.'
+          )
+        )
+        .setGroup(_('CSG - Build'))
+        .setAdvanced(true);
+
+      objectProperties
+        .getOrCreate('width')
+        .setValue((objectContent.width || 0).toString())
+        .setType('number')
+        .setLabel(_('Width'))
+        .setDescription(_('Default width of the CSG box in pixels.'))
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('CSG - Transform'));
+
+      objectProperties
+        .getOrCreate('height')
+        .setValue((objectContent.height || 0).toString())
+        .setType('number')
+        .setLabel(_('Height'))
+        .setDescription(_('Default height of the CSG box in pixels.'))
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('CSG - Transform'));
+
+      objectProperties
+        .getOrCreate('depth')
+        .setValue((objectContent.depth || 0).toString())
+        .setType('number')
+        .setLabel(_('Depth'))
+        .setDescription(_('Default depth of the CSG box in pixels.'))
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('CSG - Transform'));
+
+      objectProperties
+        .getOrCreate('roomMode')
+        .setValue(objectContent.roomMode ? 'true' : 'false')
+        .setType('boolean')
+        .setLabel(_('Room mode'))
+        .setDescription(
+          _(
+            'Make this box behave as a room volume. Prefer the CSG role property for new projects.'
+          )
+        )
+        .setGroup(_('CSG - Build'))
+        .setAdvanced(true);
+
+      objectProperties
+        .getOrCreate('facesInward')
+        .setValue(
+          objectContent.facesInward || objectContent.roomMode ? 'true' : 'false'
+        )
+        .setType('boolean')
+        .setLabel(_('Flip faces inward'))
+        .setDescription(
+          _('Render the box faces from inside the volume for rooms and tunnels.')
+        )
+        .setGroup(_('CSG - Build'));
+
+      objectProperties
+        .getOrCreate('generateCollision')
+        .setValue(objectContent.generateCollision ? 'true' : 'false')
+        .setType('boolean')
+        .setLabel(_('Generate collision'))
+        .setDescription(
+          _('Bake collision data from the generated CSG mesh for physics and queries.')
+        )
+        .setGroup(_('CSG - Collision'));
+
+      objectProperties
+        .getOrCreate('collisionLayer')
+        .setValue((objectContent.collisionLayer || 0).toString())
+        .setType('number')
+        .setLabel(_('Collision layer'))
+        .setDescription(_('Layer bits assigned to generated CSG collision.'))
+        .setGroup(_('CSG - Collision'));
+
+      objectProperties
+        .getOrCreate('collisionMask')
+        .setValue(
+          (objectContent.collisionMask === undefined
+            ? 1
+            : objectContent.collisionMask
+          ).toString()
+        )
+        .setType('number')
+        .setLabel(_('Collision mask'))
+        .setDescription(_('Mask bits used to decide what this CSG collision can hit.'))
+        .setGroup(_('CSG - Collision'));
+
+      objectProperties
+        .getOrCreate('collisionPriority')
+        .setValue((objectContent.collisionPriority || 0).toString())
+        .setType('number')
+        .setLabel(_('Collision priority'))
+        .setDescription(_('Higher priority collision surfaces win when overlaps are resolved.'))
+        .setGroup(_('CSG - Collision'));
+
+      objectProperties
+        .getOrCreate('calculateTangents')
+        .setValue(objectContent.calculateTangents ? 'true' : 'false')
+        .setType('boolean')
+        .setLabel(_('Calculate tangents'))
+        .setDescription(_('Generate tangent data for normal maps on baked CSG geometry.'))
+        .setGroup(_('CSG - Geometry'));
+
+      objectProperties
+        .getOrCreate('autoSmooth')
+        .setValue(objectContent.autoSmooth === false ? 'false' : 'true')
+        .setType('boolean')
+        .setLabel(_('Auto smooth'))
+        .setDescription(_('Regenerate clean normals after boolean operations to avoid lighting artifacts.'))
+        .setGroup(_('CSG - Geometry'));
+
+      objectProperties
+        .getOrCreate('smoothingAngle')
+        .setValue(
+          (objectContent.smoothingAngle === undefined
+            ? 30
+            : objectContent.smoothingAngle
+          ).toString()
+        )
+        .setType('number')
+        .setLabel(_('Smoothing angle'))
+        .setMeasurementUnit(gd.MeasurementUnit.getDegreeAngle())
+        .setDescription(_('Maximum angle used by CSG smoothing and generated normal cleanup.'))
+        .setGroup(_('CSG - Geometry'));
+
+      objectProperties
+        .getOrCreate('wallThickness')
+        .setValue((objectContent.wallThickness || 8).toString())
+        .setType('number')
+        .setLabel(_('Wall thickness'))
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Thickness used for generated room floors, ceilings and walls.'))
+        .setGroup(_('CSG - Build'));
+
+      objectProperties
+        .getOrCreate('csgMode')
+        .setValue(objectContent.csgMode || 'Box')
+        .setType('choice')
+        .addChoice('Box', _('Box'))
+        .addChoice('Combined', _('Combined'))
+        .setLabel(_('CSG mode'))
+        .setDescription(_('Choose whether this box is a standalone CSG box or part of a combined result.'))
+        .setGroup(_('CSG - Advanced'))
+        .setAdvanced(true);
+
+      objectProperties
         .getOrCreate('enableTextureTransparency')
         .setValue(objectContent.enableTextureTransparency ? 'true' : 'false')
         .setType('boolean')
         .setLabel(_('Enable texture transparency'))
         .setDescription(
           _(
-            'Enabling texture transparency has an impact on rendering performance.'
+            'Enable transparent face textures. This can reduce rendering performance.'
           )
         )
         .setGroup(_('Texture settings'));
@@ -3752,94 +3967,10 @@ module.exports = {
         .setLabel(_('Faces orientation'))
         .setDescription(
           _(
-            'The top of each image can touch the **top face** (Y) or the **front face** (Z).'
+            'The top of each image can touch the top face (Y) or the front face (Z).'
           )
         )
         .setGroup(_('Face orientation'))
-        .setAdvanced(true);
-
-      objectProperties
-        .getOrCreate('width')
-        .setValue((objectContent.width || 0).toString())
-        .setType('number')
-        .setLabel(_('Width'))
-        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
-        .setGroup(_('Default size'));
-
-      objectProperties
-        .getOrCreate('height')
-        .setValue((objectContent.height || 0).toString())
-        .setType('number')
-        .setLabel(_('Height'))
-        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
-        .setGroup(_('Default size'));
-
-      objectProperties
-        .getOrCreate('depth')
-        .setValue((objectContent.depth || 0).toString())
-        .setType('number')
-        .setLabel(_('Depth'))
-        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
-        .setGroup(_('Default size'));
-
-      objectProperties
-        .getOrCreate('roomMode')
-        .setValue(objectContent.roomMode ? 'true' : 'false')
-        .setType('boolean')
-        .setLabel(_('Room mode'))
-        .setDescription(
-          _(
-            'Invert faces inward and prepare floor, ceiling and wall collision surfaces.'
-          )
-        )
-        .setGroup(_('CSG'));
-
-      objectProperties
-        .getOrCreate('facesInward')
-        .setValue(
-          objectContent.facesInward || objectContent.roomMode ? 'true' : 'false'
-        )
-        .setType('boolean')
-        .setLabel(_('Flip faces inward'))
-        .setDescription(
-          _('Render the box faces from inside the volume for rooms and tunnels.')
-        )
-        .setGroup(_('CSG'));
-
-      objectProperties
-        .getOrCreate('generateCollision')
-        .setValue(objectContent.generateCollision !== false ? 'true' : 'false')
-        .setType('boolean')
-        .setLabel(_('Generate collision'))
-        .setGroup(_('CSG'));
-
-      objectProperties
-        .getOrCreate('wallThickness')
-        .setValue((objectContent.wallThickness || 8).toString())
-        .setType('number')
-        .setLabel(_('Wall thickness'))
-        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
-        .setGroup(_('CSG'));
-
-      objectProperties
-        .getOrCreate('csgMode')
-        .setValue(objectContent.csgMode || 'Box')
-        .setType('choice')
-        .addChoice('Box', _('Box'))
-        .addChoice('Combined', _('Combined'))
-        .setLabel(_('CSG mode'))
-        .setGroup(_('CSG'))
-        .setAdvanced(true);
-
-      objectProperties
-        .getOrCreate('csgOperation')
-        .setValue(objectContent.csgOperation || 'Union')
-        .setType('choice')
-        .addChoice('Union', _('Union'))
-        .addChoice('Subtract', _('Subtract'))
-        .addChoice('Intersect', _('Intersect'))
-        .setLabel(_('CSG operation'))
-        .setGroup(_('CSG'))
         .setAdvanced(true);
 
       objectProperties
@@ -4057,11 +4188,18 @@ module.exports = {
       isCastingShadow: true,
       isReceivingShadow: true,
       csgMode: 'Box',
+      csgRole: 'Solid',
       csgOperation: 'Union',
       roomMode: false,
       facesInward: false,
       wallThickness: 8,
-      generateCollision: true,
+      generateCollision: false,
+      collisionLayer: 0,
+      collisionMask: 1,
+      collisionPriority: 0,
+      calculateTangents: false,
+      autoSmooth: true,
+      smoothingAngle: 30,
     };
 
     Cube3DObject.updateInitialInstanceProperty = function (
@@ -4567,6 +4705,26 @@ module.exports = {
 
     object
       .addExpressionAndConditionAndAction(
+        'string',
+        'CSGRole',
+        _('CSG role'),
+        _('the CSG role'),
+        _('the CSG role'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters(
+        'string',
+        gd.ParameterOptions.makeNewOptions().setDescription(
+          _('Solid, Room or Cutter')
+        )
+      )
+      .setFunctionName('setCSGRole')
+      .setGetter('getCSGRole');
+
+    object
+      .addExpressionAndConditionAndAction(
         'boolean',
         'RoomMode',
         _('Room mode'),
@@ -4651,6 +4809,104 @@ module.exports = {
       .setGetter('isCollisionGenerationEnabled');
 
     object
+      .addExpressionAndConditionAndAction(
+        'number',
+        'CollisionLayer',
+        _('Collision layer'),
+        _('the generated collision layer'),
+        _('the collision layer'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters('number', gd.ParameterOptions.makeNewOptions())
+      .setFunctionName('setCollisionLayer')
+      .setGetter('getCollisionLayer');
+
+    object
+      .addExpressionAndConditionAndAction(
+        'number',
+        'CollisionMask',
+        _('Collision mask'),
+        _('the generated collision mask'),
+        _('the collision mask'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters('number', gd.ParameterOptions.makeNewOptions())
+      .setFunctionName('setCollisionMask')
+      .setGetter('getCollisionMask');
+
+    object
+      .addExpressionAndConditionAndAction(
+        'number',
+        'CollisionPriority',
+        _('Collision priority'),
+        _('the generated collision priority'),
+        _('the collision priority'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters('number', gd.ParameterOptions.makeNewOptions())
+      .setFunctionName('setCollisionPriority')
+      .setGetter('getCollisionPriority');
+
+    object
+      .addExpressionAndConditionAndAction(
+        'boolean',
+        'CalculateTangents',
+        _('Calculate tangents'),
+        _('tangent generation is enabled'),
+        _('having tangent generation enabled'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters(
+        'boolean',
+        gd.ParameterOptions.makeNewOptions().setDescription(
+          _('Calculate tangents')
+        )
+      )
+      .setFunctionName('setCalculateTangentsEnabled')
+      .setGetter('isCalculateTangentsEnabled');
+
+    object
+      .addExpressionAndConditionAndAction(
+        'boolean',
+        'AutoSmooth',
+        _('Auto smooth'),
+        _('auto smoothing is enabled'),
+        _('having auto smoothing enabled'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters(
+        'boolean',
+        gd.ParameterOptions.makeNewOptions().setDescription(_('Auto smooth'))
+      )
+      .setFunctionName('setAutoSmoothEnabled')
+      .setGetter('isAutoSmoothEnabled');
+
+    object
+      .addExpressionAndConditionAndAction(
+        'number',
+        'SmoothingAngle',
+        _('Smoothing angle'),
+        _('the smoothing angle'),
+        _('the smoothing angle'),
+        _('CSG'),
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .useStandardParameters('number', gd.ParameterOptions.makeNewOptions())
+      .setFunctionName('setSmoothingAngle')
+      .setGetter('getSmoothingAngle');
+
+    object
       .addAction(
         'WriteCollisionSurfaces',
         _('Write generated collision surfaces'),
@@ -4666,6 +4922,36 @@ module.exports = {
       .addParameter('scenevar', _('Result variable'), '', false)
       .getCodeExtraInformation()
       .setFunctionName('writeCollisionSurfaces');
+
+    object
+      .addAction(
+        'BakeStaticMesh',
+        _('Bake static mesh'),
+        _('Bake the generated static mesh descriptor into a variable.'),
+        _('Bake static mesh of _PARAM0_ into _PARAM1_'),
+        _('CSG'),
+        'res/conditions/3d_box.svg',
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .addParameter('scenevar', _('Result variable'), '', false)
+      .getCodeExtraInformation()
+      .setFunctionName('bakeStaticMesh');
+
+    object
+      .addAction(
+        'BakeCollisionShape',
+        _('Bake collision shape'),
+        _('Bake the generated collision shape descriptor into a variable.'),
+        _('Bake collision shape of _PARAM0_ into _PARAM1_'),
+        _('CSG'),
+        'res/conditions/3d_box.svg',
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('object', _('3D cube'), 'Cube3DObject', false)
+      .addParameter('scenevar', _('Result variable'), '', false)
+      .getCodeExtraInformation()
+      .setFunctionName('bakeCollisionShape');
 
     extension
       .addAction(
@@ -4712,6 +4998,50 @@ module.exports = {
       .getCodeExtraInformation()
       .setIncludeFile('Extensions/3D/CSGTools.js')
       .setFunctionName('gdjs.scene3d.csg.combineBoxes');
+
+    extension
+      .addAction(
+        'BakeCSGStaticMesh',
+        _('Bake CSG static mesh'),
+        _('Bake combined CSG boxes into a static mesh descriptor.'),
+        _('Bake _PARAM0_ as _PARAM1_ static mesh into _PARAM2_'),
+        _('3D/CSG'),
+        'res/conditions/3d_box.svg',
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('objectList', _('Source CSG boxes'), 'Cube3DObject', false)
+      .addParameter(
+        'stringWithSelector',
+        _('Operation'),
+        JSON.stringify(['Union', 'Subtract', 'Intersect']),
+        false
+      )
+      .addParameter('scenevar', _('Result variable'), '', false)
+      .getCodeExtraInformation()
+      .setIncludeFile('Extensions/3D/CSGTools.js')
+      .setFunctionName('gdjs.scene3d.csg.bakeStaticMesh');
+
+    extension
+      .addAction(
+        'BakeCSGCollisionShape',
+        _('Bake CSG collision shape'),
+        _('Bake combined CSG boxes into a collision shape descriptor.'),
+        _('Bake _PARAM0_ as _PARAM1_ collision shape into _PARAM2_'),
+        _('3D/CSG'),
+        'res/conditions/3d_box.svg',
+        'res/conditions/3d_box.svg'
+      )
+      .addParameter('objectList', _('Source CSG boxes'), 'Cube3DObject', false)
+      .addParameter(
+        'stringWithSelector',
+        _('Operation'),
+        JSON.stringify(['Union', 'Subtract', 'Intersect']),
+        false
+      )
+      .addParameter('scenevar', _('Result variable'), '', false)
+      .getCodeExtraInformation()
+      .setIncludeFile('Extensions/3D/CSGTools.js')
+      .setFunctionName('gdjs.scene3d.csg.bakeCollisionShape');
 
     const createSimplePrimitive3DObject = ({
       defaultWidth,
