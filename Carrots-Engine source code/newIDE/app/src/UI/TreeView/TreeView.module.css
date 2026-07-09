@@ -49,7 +49,7 @@
 .rowContainer {
   display: flex;
   flex: 1;
-  border-radius: 6px;
+  border-radius: 4px;
   width: 100%;
 }
 .itemName.animate {
@@ -89,7 +89,7 @@
   bottom: 0;
   width: 1px;
   background-color: var(--theme-list-item-separator-color);
-  opacity: 0.35;
+  opacity: 0.5;
 }
 
 .indentConnector {
@@ -105,12 +105,12 @@
 .itemDescription,
 .itemNameInput {
   font-family: var(--gdevelop-modern-font-family) !important;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .itemTextContainer {
   display: inline-grid;
-  gap: 2px;
+  gap: 4px;
 }
 
 .itemName {
@@ -130,17 +130,17 @@
 
 .itemName.placeholder {
   color: var(--theme-text-secondary-color);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .itemName.rootFolder {
-  font-weight: bold;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .folderIcon {
   margin-right: 4px;
-  width: 20px;
+  width: 16px;
 }
 .thumbnail {
   margin-right: 6px;

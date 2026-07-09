@@ -14,7 +14,6 @@ import Window from '../Utils/Window';
 import { isMacLike } from '../Utils/Platform';
 import GDevelopThemeContext from '../UI/Theme/GDevelopThemeContext';
 import ElementWithMenu from '../UI/Menu/ElementWithMenu';
-import TextButton from '../UI/TextButton';
 import CompactSearchBar from '../UI/CompactSearchBar';
 import { type MenuItemTemplate } from '../UI/Menu/Menu.flow';
 import {
@@ -23,74 +22,161 @@ import {
   type MainMenuCallbacks,
   type BuildMainMenuProps,
 } from './MainMenu';
+import optionalRequire from '../Utils/OptionalRequire';
+const electron = optionalRequire('electron');
 
 const WINDOW_DRAGGABLE_PART_CLASS_NAME = 'title-bar-draggable-part';
 const WINDOW_NON_DRAGGABLE_PART_CLASS_NAME = 'title-bar-non-draggable-part';
+
+// ─── Carrots Engine Menu Bar Styles ─────────────────────────────────────────
+const MENUBAR_BG = '#1b1c1f';
+const MENUBAR_TEXT = '#b8bcc4';
+const MENUBAR_TEXT_HOVER = '#e0e2e8';
+const MENUBAR_HOVER_BG = '#2a2b30';
+const MENUBAR_ACTIVE_ACCENT = '#e8914a';
+const MENUBAR_SEPARATOR = 'rgba(255,255,255,0.06)';
+const MENUBAR_HEIGHT = 36;
 
 const styles = {
   container: {
     display: 'flex',
     flexShrink: 0,
     alignItems: 'center',
-    position: 'relative', // to ensure it is displayed above any global iframe
-    minHeight: 34,
+    position: 'relative',
+    height: MENUBAR_HEIGHT,
+    minHeight: MENUBAR_HEIGHT,
+    background: MENUBAR_BG,
+    borderBottom: `1px solid rgba(0,0,0,0.4)`,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.28)',
     paddingRight: 4,
+    userSelect: 'none',
+    zIndex: 10,
   },
-  topRail: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    pointerEvents: 'none',
-  },
-  headerMenusContainer: {
+  menuItemsRow: {
     display: 'flex',
     alignItems: 'center',
-    marginLeft: 4,
-    marginRight: 4,
-    gap: 2,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  headerPrimaryMenus: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 1,
+    height: '100%',
+    gap: 0,
     flexShrink: 0,
+    paddingLeft: 6,
   },
-  headerQuickMenus: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 1,
-    flexShrink: 0,
-  },
-  headerSearchContainer: {
-    width: 220,
-    minWidth: 150,
-    maxWidth: 260,
-    marginLeft: 4,
-    marginRight: 4,
-    flexShrink: 1,
-  },
-  headerProjectName: {
-    fontSize: 12,
-    fontWeight: 700,
-    marginLeft: 2,
+  searchContainer: {
+    width: 200,
+    minWidth: 130,
+    maxWidth: 240,
+    marginLeft: 10,
     marginRight: 6,
-    maxWidth: 150,
-    padding: '2px 8px',
-    borderRadius: 7,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  headerMenuButton: {
-    minWidth: 40,
-    marginLeft: 1,
-    marginRight: 1,
+    flexShrink: 1,
   },
 };
+
+// ─── Inline CarrotLogo SVG ──────────────────────────────────────────────────
+function CarrotLogo(): React.MixedElement {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 64 64"
+      fill="none"
+      style={{ display: 'block' }}
+    >
+      {/* Carrot body */}
+      <path
+        d="M32 58L14 26C14 26 18 8 32 8C46 8 50 26 50 26L32 58Z"
+        fill="#e8914a"
+      />
+      {/* Highlight */}
+      <path
+        d="M28 18C28 18 24 28 26 40L32 54L22 30C22 30 24 16 28 18Z"
+        fill="#f4a96a"
+        opacity="0.5"
+      />
+      {/* Leaf */}
+      <path
+        d="M32 8C32 8 26 2 20 4C26 6 28 8 32 8Z"
+        fill="#5cb85c"
+      />
+      <path
+        d="M32 8C32 8 38 2 44 4C38 6 36 8 32 8Z"
+        fill="#4cae4c"
+      />
+    </svg>
+  );
+}
+
+// ─── Custom menu bar button ─────────────────────────────────────────────────
+type MenuBarButtonProps = {|
+  label: string,
+  icon?: React.Node,
+  isActive?: boolean,
+  isBrandItem?: boolean,
+  onClick?: () => void,
+|};
+
+const MenuBarButton = React.forwardRef<MenuBarButtonProps, any>(
+  ({ label, icon, isActive, isBrandItem, onClick, ...rest }: MenuBarButtonProps, ref) => {
+    const [hovered, setHovered] = React.useState(false);
+
+    const buttonStyle: Object = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: icon ? 6 : 0,
+      height: 26,
+      padding: isBrandItem ? '0 12px 0 8px' : '0 10px',
+      margin: '0 1px',
+      borderRadius: 5,
+      border: 'none',
+      outline: 'none',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: isBrandItem ? 600 : 500,
+      fontFamily: "'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      letterSpacing: '0.01em',
+      whiteSpace: 'nowrap',
+      background: hovered
+        ? MENUBAR_HOVER_BG
+        : isActive
+        ? 'rgba(232, 145, 74, 0.12)'
+        : 'transparent',
+      color: isActive
+        ? MENUBAR_ACTIVE_ACCENT
+        : hovered
+        ? MENUBAR_TEXT_HOVER
+        : MENUBAR_TEXT,
+      transition: 'background 150ms ease, color 150ms ease',
+      WebkitAppRegion: 'no-drag',
+    };
+
+    return (
+      <button
+        ref={ref}
+        style={buttonStyle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={onClick}
+        {...rest}
+      >
+        {icon}
+        <span>{label}</span>
+      </button>
+    );
+  }
+);
+
+// ─── Separator ──────────────────────────────────────────────────────────────
+function MenuSeparator(): React.MixedElement {
+  return (
+    <span
+      style={{
+        width: 1,
+        height: 16,
+        background: MENUBAR_SEPARATOR,
+        margin: '0 3px',
+        flexShrink: 0,
+      }}
+    />
+  );
+}
 
 export type TabsTitlebarQuickAccessMenu = {|
   label: string,
@@ -137,21 +223,59 @@ export default function TabsTitlebar({
   const gdevelopTheme = React.useContext(GDevelopThemeContext);
   const isTouchscreen = useScreenType() === 'touch';
   const [projectSearch, setProjectSearch] = React.useState('');
-  const topHeaderMenus = React.useMemo(
+  const { fileMenu, editMenu, helpMenu } = React.useMemo(
     () => {
       const allMenus = adaptFromDeclarativeTemplate(
-        buildMainMenuDeclarativeTemplate(buildMainMenuProps),
+        buildMainMenuDeclarativeTemplate({
+          ...buildMainMenuProps,
+          isApplicationTopLevelMenu: true,
+        }),
         mainMenuCallbacks
       );
 
-      if (!allMenus.length) return [];
-      const fileMenuIndex = isMacLike() && allMenus.length > 1 ? 1 : 0;
-      const fileMenu = allMenus[fileMenuIndex];
-      const helpMenu = allMenus[allMenus.length - 1];
-      return helpMenu === fileMenu ? [fileMenu] : [fileMenu, helpMenu];
+      const file = allMenus.find(m => m.label === 'File' || m.label === 'ملف') || allMenus[isMacLike() ? 1 : 0];
+      const edit = allMenus.find(m => m.label === 'Edit' || m.label === 'تعديل') || allMenus[isMacLike() ? 2 : 1];
+      const help = allMenus.find(m => m.label === 'Help' || m.label === 'مساعدة') || allMenus[allMenus.length - 1];
+
+      return { fileMenu: file, editMenu: edit, helpMenu: help };
     },
     [buildMainMenuProps, mainMenuCallbacks]
   );
+
+  const carrotsEngineMenu = React.useMemo(() => {
+    return {
+      label: 'Carrots Engine',
+      submenu: [
+        {
+          label: t`About Carrots Engine`,
+          click: () => mainMenuCallbacks.onOpenAbout(true),
+        },
+        { type: 'separator' },
+        {
+          label: t`My Profile`,
+          click: () => mainMenuCallbacks.onOpenProfile(true),
+        },
+        {
+          label: t`Preferences`,
+          click: () => mainMenuCallbacks.onOpenPreferences(true),
+        },
+        {
+          label: t`Language`,
+          click: () => mainMenuCallbacks.onOpenLanguage(true),
+        },
+        ...(!!electron
+          ? [
+              { type: 'separator' },
+              {
+                label: t`Quit`,
+                click: () => mainMenuCallbacks.onCloseApp(),
+              },
+            ]
+          : []),
+      ],
+    };
+  }, [mainMenuCallbacks]);
+
   const currentProjectName =
     buildMainMenuProps.project && buildMainMenuProps.project.getName
       ? buildMainMenuProps.project.getName()
@@ -235,15 +359,13 @@ export default function TabsTitlebar({
     [onSearchInProject, projectSearch]
   );
 
+  // Compute the "Carrots Engine" brand menu from the File menu
+  // (Redefined using our custom carrotsEngineMenu and resolved fileMenu/editMenu/helpMenu)
+
   return (
     <div
       style={{
         ...styles.container,
-        background: `linear-gradient(180deg, ${
-          gdevelopTheme.paper.backgroundColor.dark
-        } 0%, ${gdevelopTheme.paper.backgroundColor.medium} 130%)`,
-        borderBottom: `1px solid ${gdevelopTheme.toolbar.separatorColor}`,
-        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.16)',
         // Hiding the titlebar should still keep its position in the layout to avoid layout shifts:
         visibility: hidden ? 'hidden' : 'visible',
         pointerEvents: hidden ? undefined : 'all',
@@ -251,51 +373,100 @@ export default function TabsTitlebar({
       className={`${WINDOW_DRAGGABLE_PART_CLASS_NAME} carrots-tabs-titlebar`}
       onDoubleClick={handleDoubleClick}
     >
-      <span
-        style={{
-          ...styles.topRail,
-          background:
-            'linear-gradient(90deg, rgba(201, 106, 18, 0.35) 0%, rgba(46, 159, 91, 0.3) 100%)',
-        }}
-      />
       {isLeftMostPane && <TitleBarLeftSafeMargins />}
       {displayMenuIcon && (
         <span
           className={WINDOW_NON_DRAGGABLE_PART_CLASS_NAME}
-          style={styles.headerMenusContainer}
+          style={styles.menuItemsRow}
         >
-          {currentProjectName ? (
-            <span
-              style={{
-                ...styles.headerProjectName,
-                color: '#ffd29a',
-                background: 'rgba(201, 106, 18, 0.18)',
-                border: '1px solid rgba(255, 177, 92, 0.34)',
-                boxShadow: '0 1px 8px rgba(0, 0, 0, 0.16)',
-              }}
-              title={currentProjectName}
-            >
-              {currentProjectName}
-            </span>
-          ) : null}
-          <span style={styles.headerPrimaryMenus}>
-            {topHeaderMenus.map((menuItem, index) => (
+          {/* ── Carrots Engine brand button ── */}
+          <ElementWithMenu
+            key="carrots-engine-menu"
+            element={
+              <MenuBarButton
+                label="Carrots Engine"
+                icon={<CarrotLogo />}
+                isBrandItem
+                onClick={() => {}}
+              />
+            }
+            // $FlowFixMe[prop-missing]
+            buildMenuTemplate={() => carrotsEngineMenu.submenu || []}
+          />
+
+          <MenuSeparator />
+
+          {/* ── File menu ── */}
+          {fileMenu && (
+            <ElementWithMenu
+              key="file-menu"
+              element={
+                <MenuBarButton
+                  // $FlowFixMe[prop-missing]
+                  label={fileMenu.label || 'File'}
+                  onClick={() => {}}
+                />
+              }
+              // $FlowFixMe[prop-missing]
+              buildMenuTemplate={() => fileMenu.submenu || []}
+            />
+          )}
+
+          <MenuSeparator />
+
+          {/* ── Edit menu ── */}
+          {editMenu && (
+            <ElementWithMenu
+              key="edit-menu"
+              element={
+                <MenuBarButton
+                  // $FlowFixMe[prop-missing]
+                  label={editMenu.label || 'Edit'}
+                  onClick={() => {}}
+                />
+              }
+              // $FlowFixMe[prop-missing]
+              buildMenuTemplate={() => editMenu.submenu || []}
+            />
+          )}
+
+          <MenuSeparator />
+
+          {/* ── Quick Access menus (Game Objects, Tools, Scenes, etc.) ── */}
+          {quickAccessMenus.map((menu, index) => (
+            <React.Fragment key={`quick-menu-${menu.label}-${index}`}>
               <ElementWithMenu
-                key={`main-menu-${index}`}
                 element={
-                  <TextButton
-                    // $FlowFixMe[prop-missing]
-                    label={menuItem.label || ''}
+                  <MenuBarButton
+                    label={menu.label}
                     onClick={() => {}}
-                    style={styles.headerMenuButton}
                   />
                 }
-                // $FlowFixMe[prop-missing]
-                buildMenuTemplate={() => menuItem.submenu || []}
+                buildMenuTemplate={() => menu.submenu}
               />
-            ))}
-          </span>
-          <span style={styles.headerSearchContainer}>
+              <MenuSeparator />
+            </React.Fragment>
+          ))}
+
+          {/* ── Help menu ── */}
+          {helpMenu && (
+            <ElementWithMenu
+              key="help-menu"
+              element={
+                <MenuBarButton
+                  // $FlowFixMe[prop-missing]
+                  label={helpMenu.label || 'Help'}
+                  onClick={() => {}}
+                />
+              }
+              // $FlowFixMe[prop-missing]
+              buildMenuTemplate={() => helpMenu.submenu || []}
+            />
+          )}
+
+
+          {/* ── Search bar ── */}
+          <span style={styles.searchContainer}>
             <CompactSearchBar
               value={projectSearch}
               onChange={setProjectSearch}
@@ -303,21 +474,30 @@ export default function TabsTitlebar({
               placeholder={t`Search in project`}
             />
           </span>
-          <span style={styles.headerQuickMenus}>
-            {quickAccessMenus.map((menu, index) => (
-              <ElementWithMenu
-                key={`quick-menu-${menu.label}-${index}`}
-                element={
-                  <TextButton
-                    label={menu.label}
-                    onClick={() => {}}
-                    style={styles.headerMenuButton}
-                  />
-                }
-                buildMenuTemplate={() => menu.submenu}
-              />
-            ))}
-          </span>
+
+          {/* ── Project name pill ── */}
+          {currentProjectName ? (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#e8914a',
+                background: 'rgba(232, 145, 74, 0.10)',
+                border: '1px solid rgba(232, 145, 74, 0.22)',
+                borderRadius: 5,
+                padding: '2px 10px',
+                marginLeft: 4,
+                maxWidth: 140,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                letterSpacing: '0.01em',
+              }}
+              title={currentProjectName}
+            >
+              {currentProjectName}
+            </span>
+          ) : null}
         </span>
       )}
       {renderTabs(onEditorTabHovered, onEditorTabClosing)}

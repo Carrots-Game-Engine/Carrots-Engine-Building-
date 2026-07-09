@@ -701,7 +701,62 @@ const EditorTabsPane: React.ComponentType<{
 
     return [
       {
-        label: 'Game settings',
+        label: 'Game Objects',
+        submenu: [
+          {
+            label: '2D Objects',
+            submenu: [
+              { label: 'Sprite', click: () => onAddGameObject('Sprite', 'Sprite') },
+              { label: 'Tiled Sprite', click: () => onAddGameObject('TiledSpriteObject::TiledSprite', 'TiledSprite') },
+              { label: 'Panel Sprite', click: () => onAddGameObject('PanelSpriteObject::PanelSprite', 'PanelSprite') },
+              { label: 'Text', click: () => onAddGameObject('TextObject::Text', 'Text') },
+              { label: 'Shape Painter', click: () => onAddGameObject('PrimitiveDrawing::Drawer', 'ShapePainter') },
+              { label: 'Particle Emitter', click: () => onAddGameObject('ParticleSystem::ParticleEmitter', 'ParticleEmitter') },
+              { label: 'Light', click: () => onAddGameObject('Lighting::LightObject', 'Light') },
+            ]
+          },
+          {
+            label: '3D Objects',
+            submenu: [
+              { label: '3D Box', click: () => onAddGameObject('Scene3D::Cube3DObject', 'Box3D') },
+              { label: '3D Model', click: () => onAddGameObject('Scene3D::Model3DObject', 'Model3D') },
+            ]
+          },
+          {
+            label: 'UI & Media',
+            submenu: [
+              { label: 'Text Input', click: () => onAddGameObject('TextEntryObject::TextEntry', 'TextInput') },
+              { label: 'Video', click: () => onAddGameObject('Video::VideoObject', 'Video') },
+            ]
+          }
+        ]
+      },
+      {
+        label: 'Tools',
+        submenu: [
+          {
+            label: 'Command Palette',
+            click: () => triggerProjectCommand('OPEN_COMMAND_PALETTE'),
+            enabled: true,
+          },
+        ],
+      },
+      {
+        label: 'Scenes',
+        submenu: [
+          {
+            label: 'Open scene manager',
+            click: () => openProjectManager(true),
+            enabled: !!currentProject,
+          },
+          { type: 'separator' },
+          ...(sceneItems.length
+            ? sceneItems
+            : [{ label: 'No scenes', enabled: false }]),
+        ],
+      },
+      {
+        label: 'Game Settings',
         submenu: [
           {
             label: 'Project manager',
@@ -749,51 +804,6 @@ const EditorTabsPane: React.ComponentType<{
             enabled: !!currentProject,
           },
         ],
-      },
-      {
-        label: 'Scenes',
-        submenu: [
-          {
-            label: 'Open scene manager',
-            click: () => openProjectManager(true),
-            enabled: !!currentProject,
-          },
-          { type: 'separator' },
-          ...(sceneItems.length
-            ? sceneItems
-            : [{ label: 'No scenes', enabled: false }]),
-        ],
-      },
-      {
-        label: 'Game Objects',
-        submenu: [
-          {
-            label: '2D Objects',
-            submenu: [
-              { label: 'Sprite', click: () => onAddGameObject('Sprite', 'Sprite') },
-              { label: 'Tiled Sprite', click: () => onAddGameObject('TiledSpriteObject::TiledSprite', 'TiledSprite') },
-              { label: 'Panel Sprite', click: () => onAddGameObject('PanelSpriteObject::PanelSprite', 'PanelSprite') },
-              { label: 'Text', click: () => onAddGameObject('TextObject::Text', 'Text') },
-              { label: 'Shape Painter', click: () => onAddGameObject('PrimitiveDrawing::Drawer', 'ShapePainter') },
-              { label: 'Particle Emitter', click: () => onAddGameObject('ParticleSystem::ParticleEmitter', 'ParticleEmitter') },
-              { label: 'Light', click: () => onAddGameObject('Lighting::LightObject', 'Light') },
-            ]
-          },
-          {
-            label: '3D Objects',
-            submenu: [
-              { label: '3D Box', click: () => onAddGameObject('Scene3D::Cube3DObject', 'Box3D') },
-              { label: '3D Model', click: () => onAddGameObject('Scene3D::Model3DObject', 'Model3D') },
-            ]
-          },
-          {
-            label: 'UI & Media',
-            submenu: [
-              { label: 'Text Input', click: () => onAddGameObject('TextEntryObject::TextEntry', 'TextInput') },
-              { label: 'Video', click: () => onAddGameObject('Video::VideoObject', 'Video') },
-            ]
-          }
-        ]
       },
       {
         label: 'Extensions',

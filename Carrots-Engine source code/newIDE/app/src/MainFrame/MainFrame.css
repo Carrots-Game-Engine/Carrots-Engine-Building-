@@ -30,15 +30,12 @@ html {
 
 body {
   overflow: hidden;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.45;
   font-family: var(--gdevelop-modern-font-family);
   letter-spacing: 0.01em;
   text-rendering: optimizeLegibility;
-  background:
-    radial-gradient(130% 110% at 8% 0%, rgba(46, 159, 91, 0.14), transparent 42%),
-    radial-gradient(90% 80% at 92% 0%, rgba(242, 140, 40, 0.13), transparent 40%),
-    #101512;
+  background: #1c1d20;
 }
 
 #root {
@@ -167,4 +164,93 @@ select {
 .carrots-main-toolbar .MuiIconButton-root:hover,
 .carrots-tabs-titlebar .MuiIconButton-root:hover {
   background-color: rgba(255, 177, 92, 0.14);
+}
+
+/* ── Carrots Engine Dropdown Menu Overrides ────────────────────────────────── */
+
+/* Menu paper (the floating dropdown panel) */
+.MuiMenu-paper,
+.MuiPopover-paper {
+  background: #242529 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  padding: 4px 0 !important;
+  min-width: 180px !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Menu list container */
+.MuiMenu-list,
+.MuiList-root {
+  padding: 4px !important;
+}
+
+/* Menu items */
+.MuiMenuItem-root {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  color: #c4c7ce !important;
+  padding: 5px 16px 5px 12px !important;
+  border-radius: 6px !important;
+  margin: 0 4px !important;
+  min-height: 30px !important;
+  transition: background 120ms ease, color 120ms ease !important;
+  letter-spacing: 0.01em !important;
+}
+
+.MuiMenuItem-root:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #e8eaef !important;
+}
+
+.MuiMenuItem-root.Mui-selected,
+.MuiMenuItem-root.Mui-selected:hover {
+  background: rgba(232, 145, 74, 0.14) !important;
+  color: #e8914a !important;
+}
+
+.MuiMenuItem-root.Mui-disabled {
+  color: rgba(255, 255, 255, 0.25) !important;
+  opacity: 1 !important;
+}
+
+/* Keyboard shortcut labels inside menus */
+.MuiMenuItem-root .MuiListItemText-secondary,
+.MuiMenuItem-root span[style*="marginLeft"] {
+  color: rgba(255, 255, 255, 0.3) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+}
+
+/* Separators / Dividers in menus */
+.MuiDivider-root {
+  background: rgba(255, 255, 255, 0.06) !important;
+  margin: 4px 8px !important;
+}
+
+/* Submenu arrow icons */
+.MuiMenuItem-root svg {
+  fill: rgba(255, 255, 255, 0.35) !important;
+}
+
+.MuiMenuItem-root:hover svg {
+  fill: rgba(255, 255, 255, 0.55) !important;
+}
+
+/* Smooth opening animation for menus */
+.MuiMenu-paper .MuiList-root {
+  animation: carrots-menu-fadein 120ms ease-out;
+}
+
+@keyframes carrots-menu-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

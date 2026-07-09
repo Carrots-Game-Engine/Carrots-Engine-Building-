@@ -26,7 +26,7 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     fontSize: '12px',
-    fontWeight: 600,
+    fontWeight: 500,
     letterSpacing: '0.005em',
   },
   tabIcon: {
@@ -255,10 +255,10 @@ export function ClosableTab({
           scrollMarginRight: 20,
           scrollMarginLeft: 20,
           // Style:
-          borderTopRightRadius: 8,
-          borderTopLeftRadius: 8,
-          borderBottomRightRadius: 8,
-          borderBottomLeftRadius: 8,
+          borderTopRightRadius: 6,
+          borderTopLeftRadius: 6,
+          borderBottomRightRadius: 6,
+          borderBottomLeftRadius: 6,
           borderTop: '1px solid',
           borderRight: '1px solid',
           borderLeft: '1px solid',
@@ -269,7 +269,7 @@ export function ClosableTab({
           backgroundColor: !active
             ? gdevelopTheme.paper.backgroundColor.dark
             : gdevelopTheme.closableTabs.selectedBackgroundColor,
-          boxShadow: active ? '0 3px 8px rgba(0, 0, 0, 0.16)' : 'none',
+          boxShadow: 'none',
           transform: 'translateY(0)',
           transition:
             'background-color 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease',

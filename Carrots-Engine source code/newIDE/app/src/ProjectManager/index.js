@@ -1769,7 +1769,7 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
     const onCreateNewTypeScriptScriptAndOpen = React.useCallback(
       () => {
         if (!project) return;
-        const newName = newNameGenerator(i18n._(t`UntitledExtension`), name =>
+        const newName = newNameGenerator(buildMainMenuProps.i18n._(t`UntitledExtension`), name =>
           isExtensionNameTaken(name, project)
         );
         const eventsFunctionsExtension = project.insertNewEventsFunctionsExtension(
@@ -1779,7 +1779,7 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
         onProjectItemModified();
         onOpenEventsFunctionsExtension(newName);
       },
-      [project, i18n, onProjectItemModified, onOpenEventsFunctionsExtension]
+      [project, buildMainMenuProps, onProjectItemModified, onOpenEventsFunctionsExtension]
     );
 
     const { translatedExtensionShortHeadersByName } = React.useContext(
@@ -1854,13 +1854,13 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
     const onCreateNewExternalEventsAndOpen = React.useCallback(() => {
       if (!project) return;
       const newName = newNameGenerator(
-        i18n._(t`Untitled external events`),
+        buildMainMenuProps.i18n._(t`Untitled external events`),
         name => project.hasExternalEventsNamed(name)
       );
       project.insertNewExternalEvents(newName, project.getExternalEventsCount());
       onProjectItemModified();
       onOpenExternalEvents(newName);
-    }, [project, i18n, onProjectItemModified, onOpenExternalEvents]);
+    }, [project, buildMainMenuProps, onProjectItemModified, onOpenExternalEvents]);
 
     const addExternalLayout = React.useCallback(
       (index: number, i18n: I18nType) => {

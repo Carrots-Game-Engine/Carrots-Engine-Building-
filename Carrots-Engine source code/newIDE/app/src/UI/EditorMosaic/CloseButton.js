@@ -2,7 +2,6 @@
 import * as React from 'react';
 import IconButton from '../IconButton';
 import Cross from '../CustomSvgIcons/Cross';
-import { MosaicWindowContext, MosaicContext } from 'react-mosaic-component';
 
 const styles = {
   container: {
@@ -16,21 +15,23 @@ const styles = {
   },
 };
 
-type Props = {||};
+type Props = {|
+  onClose?: () => void,
+|};
 
-export default function CloseButton(props: Props): React.Node {
-  const { mosaicActions } = React.useContext(MosaicContext);
-  const { mosaicWindowActions } = React.useContext(MosaicWindowContext);
-
+/**
+ * A simple close button. When used inside FlexLayout tabs,
+ * the close behaviour is handled by FlexLayout itself,
+ * so this component is mostly kept for backward-compat.
+ */
+export default function CloseButton({ onClose }: Props): React.Node {
+  if (!onClose) return null;
   return (
     // $FlowFixMe[incompatible-type]
-    <IconButton
-      onClick={() => {
-        mosaicActions.remove(mosaicWindowActions.getPath());
-      }}
-      style={styles.container}
-    >
+    <IconButton onClick={onClose} style={styles.container}>
       <Cross htmlColor="inherit" style={styles.icon} />
     </IconButton>
   );
 }
+
+

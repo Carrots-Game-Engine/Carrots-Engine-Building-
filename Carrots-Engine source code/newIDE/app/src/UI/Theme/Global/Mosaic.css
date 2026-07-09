@@ -1,11 +1,11 @@
-/* Mosaic layout */
+/* Mosaic layout overrides for Carrots Engine */
 .mosaic-gd-theme {
-  --carrots-mosaic-window-radius: 10px;
-  --carrots-mosaic-toolbar-background-color: #1d222b;
-  --carrots-mosaic-body-background-color: #141922;
-  --carrots-mosaic-window-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
-  --carrots-mosaic-split-color: rgba(220, 229, 240, 0.22);
-  --carrots-mosaic-split-color-hover: rgba(220, 229, 240, 0.45);
+  --carrots-mosaic-window-radius: 6px;
+  --carrots-mosaic-toolbar-background-color: #24262b;
+  --carrots-mosaic-body-background-color: #1c1d20;
+  --carrots-mosaic-window-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --carrots-mosaic-split-color: #3b3d43;
+  --carrots-mosaic-split-color-hover: #e8914a; /* Carrots orange accent */
 }
 
 .mosaic-gd-theme.mosaic {
@@ -27,7 +27,8 @@
   box-shadow: none !important;
   border-top-right-radius: var(--carrots-mosaic-window-radius) !important;
   border-top-left-radius: var(--carrots-mosaic-window-radius) !important;
-  border-bottom: 1px solid rgba(220, 229, 240, 0.1);
+  border-bottom: 1px solid var(--carrots-mosaic-split-color);
+  height: 32px !important; /* Slightly taller for modern look */
 }
 
 .mosaic-gd-theme .mosaic-window-body {
@@ -35,26 +36,29 @@
   border-bottom-left-radius: var(--carrots-mosaic-window-radius) !important;
   border-bottom-right-radius: var(--carrots-mosaic-window-radius) !important;
   box-shadow: var(--carrots-mosaic-window-shadow);
+  border: 1px solid var(--carrots-mosaic-split-color);
+  border-top: none;
 }
 
 .mosaic-gd-theme .mosaic-window .mosaic-window-title {
-  padding-left: 8px; /* Follow same spacing as in the rest of the app. */
+  padding-left: 12px;
   color: var(--mosaic-title-color) !important;
-  font-weight: 400 !important;
+  font-weight: 500 !important;
   font-family: var(--font-family-base, var(--gdevelop-modern-font-family));
-  font-size: 15px; /* Same as ClosableTabs font size */
+  font-size: 13px; 
 }
 
 /* Hovered titlebar background */
 .mosaic-gd-theme.mosaic-blueprint-theme .mosaic-window .mosaic-window-toolbar.draggable:hover,
 .mosaic-gd-theme.mosaic.mosaic-blueprint-theme .mosaic-preview .mosaic-window-toolbar.draggable:hover {
-  background: var(--carrots-mosaic-toolbar-background-color) !important;
+  background: #2d3036 !important;
 }
 
 .mosaic-gd-theme .mosaic-window {
   pointer-events: all;
   border-radius: var(--carrots-mosaic-window-radius);
   overflow: hidden;
+  margin: 2px; /* Add spacing between panels */
 }
 
 .mosaic-gd-theme .mosaic-split {
@@ -63,19 +67,17 @@
 
 /* Separator draggable background (horizontal split) */
 .mosaic-gd-theme .mosaic-split.-column .mosaic-split-line {
-  height: 4px;
+  height: 2px;
   background-color: var(--carrots-mosaic-split-color);
-  opacity: 0;
-  border-radius: 999px;
-  width: 64px;
+  opacity: 1; /* Always show the subtle separator */
+  width: 100%;
   margin: auto;
   top: 0;
-  transition: opacity 0.12s ease-in-out, background-color 0.12s ease-in-out;
+  transition: background-color 0.15s ease-in-out;
 }
 
 .mosaic-gd-theme .mosaic-split.-column:hover .mosaic-split-line {
   background-color: var(--carrots-mosaic-split-color-hover);
-  opacity: 1;
   box-shadow: none !important;
   cursor: ns-resize;
   z-index: 5;
@@ -83,19 +85,17 @@
 
 /* Separator draggable background (vertical split) */
 .mosaic-gd-theme .mosaic-split.-row .mosaic-split-line {
-  width: 4px;
+  width: 2px;
   background-color: var(--carrots-mosaic-split-color);
-  opacity: 0;
-  border-radius: 999px;
-  height: 64px;
+  opacity: 1;
+  height: 100%;
   margin: auto;
   left: 0;
-  transition: opacity 0.12s ease-in-out, background-color 0.12s ease-in-out;
+  transition: background-color 0.15s ease-in-out;
 }
 
 .mosaic-gd-theme .mosaic-split.-row:hover .mosaic-split-line {
   background-color: var(--carrots-mosaic-split-color-hover);
-  opacity: 1;
   box-shadow: none !important;
   cursor: ew-resize;
   z-index: 5;
