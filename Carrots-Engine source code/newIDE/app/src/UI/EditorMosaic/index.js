@@ -184,4 +184,38 @@ const EditorMosaic: React.ComponentType<{
   }
 );
 
+/**
+ * Check if a node with the given name exists in the layout tree.
+ * Works with both legacy mosaic nodes and FlexLayout JSON.
+ */
+export const mosaicContainsNode = (
+  node: ?EditorMosaicNode,
+  nodeName: string
+): boolean => {
+  if (!node) return false;
+  if (typeof node === 'string') return node === nodeName;
+  if (Array.isArray(node)) return node.includes(nodeName);
+
+  // FlexLayout JSON format
+  if (node.global && node.layout) {
+    return mosaicContainsNode(node.layout, nodeName);
+  }
+  if (node.children) {
+    return node.children.some(child => mosaicContainsNode(child, nodeName));
+  }
+
+  // Legacy mosaic format
+  if (node.first && node.second) {
+    return (
+      mosaicContainsNode(node.first, nodeName) ||
+      mosaicContainsNode(node.second, nodeName)
+    );
+  }
+
+  // Tab node
+  if (node.component === nodeName || node.id === nodeName) return true;
+
+  return false;
+};
+
 export default EditorMosaic;

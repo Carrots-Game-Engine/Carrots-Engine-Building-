@@ -1769,7 +1769,8 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
     const onCreateNewTypeScriptScriptAndOpen = React.useCallback(
       () => {
         if (!project) return;
-        const newName = newNameGenerator(buildMainMenuProps.i18n._(t`UntitledExtension`), name =>
+        const i18n = buildMainMenuProps.i18n;
+        const newName = newNameGenerator(i18n._(t`UntitledExtension`), name =>
           isExtensionNameTaken(name, project)
         );
         const eventsFunctionsExtension = project.insertNewEventsFunctionsExtension(
@@ -1853,8 +1854,9 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
 
     const onCreateNewExternalEventsAndOpen = React.useCallback(() => {
       if (!project) return;
+      const i18n = buildMainMenuProps.i18n;
       const newName = newNameGenerator(
-        buildMainMenuProps.i18n._(t`Untitled external events`),
+        i18n._(t`Untitled external events`),
         name => project.hasExternalEventsNamed(name)
       );
       project.insertNewExternalEvents(newName, project.getExternalEventsCount());
