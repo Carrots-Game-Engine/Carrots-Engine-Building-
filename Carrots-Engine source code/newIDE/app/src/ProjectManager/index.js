@@ -1766,6 +1766,22 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
       [editName, onProjectItemModified, scrollToItem]
     );
 
+    const onCreateNewTypeScriptScriptAndOpen = React.useCallback(
+      () => {
+        if (!project) return;
+        const newName = newNameGenerator(i18n._(t`UntitledExtension`), name =>
+          isExtensionNameTaken(name, project)
+        );
+        const eventsFunctionsExtension = project.insertNewEventsFunctionsExtension(
+          newName,
+          project.getEventsFunctionsExtensionsCount()
+        );
+        onProjectItemModified();
+        onOpenEventsFunctionsExtension(newName);
+      },
+      [project, i18n, onProjectItemModified, onOpenEventsFunctionsExtension]
+    );
+
     const { translatedExtensionShortHeadersByName } = React.useContext(
       ExtensionStoreContext
     );
@@ -1832,8 +1848,19 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
         // We focus it so the user can edit the name directly.
         editName(externalEventsItemId);
       },
-      [project, onProjectItemModified, editName, scrollToItem]
+      [editName, onProjectItemModified, project, scrollToItem]
     );
+
+    const onCreateNewExternalEventsAndOpen = React.useCallback(() => {
+      if (!project) return;
+      const newName = newNameGenerator(
+        i18n._(t`Untitled external events`),
+        name => project.hasExternalEventsNamed(name)
+      );
+      project.insertNewExternalEvents(newName, project.getExternalEventsCount());
+      onProjectItemModified();
+      onOpenExternalEvents(newName);
+    }, [project, i18n, onProjectItemModified, onOpenExternalEvents]);
 
     const addExternalLayout = React.useCallback(
       (index: number, i18n: I18nType) => {
@@ -2688,6 +2715,8 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
           onOpenTypeScriptScriptsDialog={onOpenTypeScriptScripts}
           onOpenPlatformSpecificAssetsDialog={openProjectIcons}
           onOpenSearchExtensionDialog={openSearchExtensionDialog}
+          onCreateNewExternalEvents={onCreateNewExternalEventsAndOpen}
+          onCreateNewTypeScriptScript={onCreateNewTypeScriptScriptAndOpen}
         />
         <Line expand>
           <ColumnStackLayout noMargin expand>

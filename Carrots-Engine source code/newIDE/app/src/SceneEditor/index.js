@@ -1851,6 +1851,57 @@ export default class SceneEditor extends React.Component<Props, State> {
     );
   };
 
+  _createObjectAndInstanceUnderCursor = (
+    objectType: string,
+    defaultName: string
+  ) => {
+    if (objectType.startsWith('Scene3D::') && !this.canCurrentSceneContain3DObjects()) {
+      return;
+    }
+    const { editorDisplay } = this;
+    const { project, objectsContainer, globalObjectsContainer } = this.props;
+    if (!editorDisplay) {
+      return;
+    }
+
+    const objectName = newNameGenerator(
+      defaultName,
+      (name) =>
+        objectsContainer.hasObjectNamed(name) ||
+        (!!globalObjectsContainer &&
+          globalObjectsContainer.hasObjectNamed(name))
+    );
+    const isTheFirstOfItsTypeInProject = !gd.UsedObjectTypeFinder.scanProject(
+      project,
+      objectType
+    );
+
+    this.setState(
+      {
+        newObjectInstanceSceneCoordinates:
+          editorDisplay.viewControls.getLastCursorSceneCoordinates(),
+      },
+      () => {
+        const object = objectsContainer.insertNewObject(
+          project,
+          objectType,
+          objectName,
+          objectsContainer.getObjectsCount()
+        );
+        const objectFolderOrObject = objectsContainer
+          .getRootFolder()
+          .getObjectChild(objectName);
+        if (objectFolderOrObject) {
+          this._onObjectFolderOrObjectWithContextSelected({
+            objectFolderOrObject,
+            global: false,
+          });
+        }
+        this._onObjectCreated([object], isTheFirstOfItsTypeInProject);
+      }
+    );
+  };
+
   addInstanceOnTheScene = (
     objectName: string,
     targetPosition: 'center' | 'upperCenter' = 'center'

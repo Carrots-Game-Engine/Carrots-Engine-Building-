@@ -597,6 +597,19 @@ const EditorTabsPane: React.ComponentType<{
     [askAiPaneIdentifier, onOpenAskAi, onSetPaneDrawerState]
   );
 
+  const onAddGameObject = React.useCallback(
+    (objectType: string, defaultName: string) => {
+      if (
+        currentTab &&
+        currentTab.editorRef &&
+        typeof currentTab.editorRef.createObjectAndInstance === 'function'
+      ) {
+        currentTab.editorRef.createObjectAndInstance(objectType, defaultName);
+      }
+    },
+    [currentTab]
+  );
+
   const triggerProjectCommand = React.useCallback(
     (commandName: string) => {
       if (!commandManager || !commandManager.getNamedCommand) return;
@@ -752,17 +765,44 @@ const EditorTabsPane: React.ComponentType<{
         ],
       },
       {
+        label: 'Game Objects',
+        submenu: [
+          {
+            label: '2D Objects',
+            submenu: [
+              { label: 'Sprite', click: () => onAddGameObject('Sprite', 'Sprite') },
+              { label: 'Tiled Sprite', click: () => onAddGameObject('TiledSpriteObject::TiledSprite', 'TiledSprite') },
+              { label: 'Panel Sprite', click: () => onAddGameObject('PanelSpriteObject::PanelSprite', 'PanelSprite') },
+              { label: 'Text', click: () => onAddGameObject('TextObject::Text', 'Text') },
+              { label: 'Shape Painter', click: () => onAddGameObject('PrimitiveDrawing::Drawer', 'ShapePainter') },
+              { label: 'Particle Emitter', click: () => onAddGameObject('ParticleSystem::ParticleEmitter', 'ParticleEmitter') },
+              { label: 'Light', click: () => onAddGameObject('Lighting::LightObject', 'Light') },
+            ]
+          },
+          {
+            label: '3D Objects',
+            submenu: [
+              { label: '3D Box', click: () => onAddGameObject('Scene3D::Cube3DObject', 'Box3D') },
+              { label: '3D Model', click: () => onAddGameObject('Scene3D::Model3DObject', 'Model3D') },
+            ]
+          },
+          {
+            label: 'UI & Media',
+            submenu: [
+              { label: 'Text Input', click: () => onAddGameObject('TextEntryObject::TextEntry', 'TextInput') },
+              { label: 'Video', click: () => onAddGameObject('Video::VideoObject', 'Video') },
+            ]
+          }
+        ]
+      },
+      {
         label: 'Extensions',
         submenu: [
           {
-            label: 'Search/import extensions',
+            label: 'Extensions Store',
             click: () => triggerProjectCommand('OPEN_SEARCH_EXTENSIONS_DIALOG'),
             enabled: !!currentProject,
           },
-          { type: 'separator' },
-          ...(extensionItems.length
-            ? extensionItems
-            : [{ label: 'No extensions', enabled: false }]),
         ],
       },
       {
@@ -791,6 +831,21 @@ const EditorTabsPane: React.ComponentType<{
           ...(externalEventsItems.length
             ? externalEventsItems
             : [{ label: 'No external events', enabled: false }]),
+        ],
+      },
+      {
+        label: 'Scripts',
+        submenu: [
+          {
+            label: 'Event Sheet',
+            click: () => triggerProjectCommand('CREATE_NEW_EXTERNAL_EVENTS'),
+            enabled: !!currentProject,
+          },
+          {
+            label: 'TypeScript',
+            click: () => triggerProjectCommand('CREATE_NEW_TYPESCRIPT_SCRIPT'),
+            enabled: !!currentProject,
+          },
         ],
       },
     ];
@@ -932,6 +987,7 @@ const EditorTabsPane: React.ComponentType<{
           buildMainMenuProps={buildMainMenuProps}
           mainMenuCallbacks={mainMenuCallbacks}
           quickAccessMenus={quickAccessMenus}
+          onAddGameObject={onAddGameObject}
           onSearchInProject={searchInProjectFromHeader}
           renderTabs={(onEditorTabHovered, onEditorTabClosing) => (
             <DraggableEditorTabs
