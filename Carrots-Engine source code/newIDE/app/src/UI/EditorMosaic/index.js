@@ -3,6 +3,7 @@ import * as React from 'react';
 import * as FlexLayout from 'flexlayout-react';
 import 'flexlayout-react/style/dark.css';
 import './style.css';
+import { I18n } from '@lingui/react';
 
 export type Direction = 'row' | 'column';
 
@@ -163,7 +164,17 @@ const EditorMosaic: React.ComponentType<{
       const component = node.getComponent();
       const editor = editors[component];
       if (editor && editor.title) {
-        renderState.content = <span className="flexlayout__tab_button_content">{editor.title}</span>;
+        renderState.content = (
+          <I18n>
+            {({ i18n }) => (
+              <span className="flexlayout__tab_button_content">
+                {typeof editor.title === 'object' && editor.title !== null && !React.isValidElement(editor.title) 
+                  ? i18n._(editor.title) 
+                  : editor.title}
+              </span>
+            )}
+          </I18n>
+        );
       }
       if (editor && editor.toolbarControls) {
         renderState.buttons = editor.toolbarControls.map((Control, i) => <div key={i}>{Control}</div>);
