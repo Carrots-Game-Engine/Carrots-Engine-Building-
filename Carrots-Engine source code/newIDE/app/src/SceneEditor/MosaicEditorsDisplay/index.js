@@ -38,23 +38,23 @@ import { useDoNowOrAfterRender } from '../../Utils/UseDoNowOrAfterRender';
 import { preventGameFramePointerEvents } from '../../EmbeddedGame/EmbeddedGameFrame';
 import { EmbeddedGameFrameHole } from '../../EmbeddedGame/EmbeddedGameFrameHole';
 
-const SCENE_EDITOR_MOSAIC_LAYOUT_KEY = 'scene-editor-unity-layout-v1';
+const SCENE_EDITOR_MOSAIC_LAYOUT_KEY = 'carrots-editor-layout-v3';
 
 const initialMosaicEditorNodes = {
-  direction: 'column',
-  splitPercentage: 74,
-  first: {
+  direction: 'row',
+  splitPercentage: 18,
+  first: 'instances-list',
+  second: {
     direction: 'row',
-    splitPercentage: 18,
-    first: 'instances-list',
-    second: {
-      direction: 'row',
-      splitPercentage: 77,
+    splitPercentage: 75,
+    first: {
+      direction: 'column',
+      splitPercentage: 70,
       first: 'instances-editor',
-      second: 'properties',
+      second: ['project-resources', 'console', 'layers-list']
     },
+    second: 'properties',
   },
-  second: 'project-resources',
 };
 
 const noop = () => {};
@@ -73,7 +73,7 @@ const defaultPanelConfigByEditor = {
     position: 'left',
   },
   'layers-list': {
-    position: 'left',
+    position: 'bottom',
   },
   'project-resources': {
     position: 'bottom',

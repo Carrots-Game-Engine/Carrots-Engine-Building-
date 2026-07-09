@@ -1,82 +1,146 @@
-/* Carrots Editor Mosaic overrides */
+/* Carrots Editor FlexLayout overrides */
 
-/* Mosaic layout */
-.mosaic-gd-theme.mosaic {
-  padding: 4px;
-}
-
-.mosaic-gd-theme.mosaic .mosaic-root {
-  left: 2px;
-  right: 2px;
-  top: 2px;
-  bottom: 2px;
-}
-
-.mosaic-gd-theme .mosaic-window {
-  border: 0 !important;
-  background: transparent;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.mosaic-gd-theme .mosaic-window-body {
-  display: flex;
-  border: 1px solid rgba(220, 229, 240, 0.1);
-  border-top: 0;
-  background: var(--carrots-mosaic-body-background-color, #141922) !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
-/* Make the horizontal split to have the same thickness as the vertical */
-.mosaic-gd-theme .mosaic-split.-column {
-  margin-top: -2px;
-  height: 4px;
-}
-
-/* Mosaic window and tile */
-.mosaic-gd-theme.mosaic.mosaic-blueprint-theme .mosaic-window,
-.mosaic-gd-theme.mosaic.mosaic-blueprint-theme .mosaic-preview {
-  box-shadow: none;
-  border: 0;
-}
-
-.mosaic-gd-theme .mosaic-tile {
-  margin: 2px;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.mosaic-gd-theme .mosaic-window-toolbar {
-  min-height: 34px;
-  border-bottom: 1px solid rgba(220, 229, 240, 0.1);
-  background: var(--carrots-mosaic-toolbar-background-color, #1d222b) !important;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-.mosaic-gd-theme .mosaic-window-toolbar .mosaic-window-title {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.02em;
+/* ── Layout root ── */
+.flexlayout__layout {
+  background-color: #1c1d20;
   font-family: var(--font-family-base), var(--gdevelop-modern-font-family);
 }
 
-.mosaic-gd-theme .mosaic-window-toolbar .mosaic-window-controls {
-  gap: 2px;
-  padding-right: 4px;
+/* ── Tabsets (the container that holds a tab strip + content) ── */
+.flexlayout__tabset {
+  background-color: #1c1d20;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.mosaic-gd-theme .draggable .mosaic-window-title {
-  cursor: grab;
+.flexlayout__tabset_header {
+  background-color: #24262b;
+  border-bottom: 1px solid #3b3d43;
+  padding: 0;
 }
 
-.mosaic-gd-theme .draggable:active .mosaic-window-title {
-  cursor: grabbing;
+.flexlayout__tabset_tabbar_outer {
+  background-color: #24262b;
+  border-bottom: 1px solid #3b3d43;
 }
 
-.mosaic-gd-theme .mosaic-split.-row .mosaic-split-line,
-.mosaic-gd-theme .mosaic-split.-column .mosaic-split-line {
+.flexlayout__tabset_tabbar_inner {
+  background-color: #24262b;
+}
+
+/* ── Tab buttons ── */
+.flexlayout__tab_button {
+  background-color: transparent;
+  color: #888;
+  padding: 4px 14px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.flexlayout__tab_button--selected {
+  background-color: #2d3036;
+  color: #fff;
+  box-shadow: inset 0 -2px 0 #eb8a2f;
+}
+
+.flexlayout__tab_button:hover {
+  background-color: #2d3036;
+  color: #ccc;
+}
+
+.flexlayout__tab_button_trailing {
+  margin-left: 6px;
   opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.flexlayout__tab_button_trailing:hover {
+  opacity: 1;
+}
+
+/* ── Tab content area ── */
+.flexlayout__tab {
+  background-color: #1c1d20;
+  border: none;
+  overflow: auto;
+}
+
+/* ── Splitters ── */
+.flexlayout__splitter {
+  background-color: #2a2c31;
+  transition: background-color 0.15s ease;
+}
+
+.flexlayout__splitter:hover {
+  background-color: #eb8a2f;
+}
+
+.flexlayout__splitter_drag {
+  background-color: #eb8a2f;
+}
+
+/* ── Borders (side docking areas) ── */
+.flexlayout__border_button {
+  background-color: transparent;
+  color: #888;
+  font-size: 12px;
+  border: none;
+}
+
+.flexlayout__border_button--selected {
+  background-color: #2d3036;
+  color: #fff;
+}
+
+/* ── Drag overlay ── */
+.flexlayout__outline_rect {
+  border: 2px solid #eb8a2f;
+  background: rgba(235, 138, 47, 0.08);
+  border-radius: 4px;
+}
+
+.flexlayout__edge_rect {
+  background: rgba(235, 138, 47, 0.15);
+  border: 2px solid #eb8a2f;
+}
+
+/* ── Maximize / close icons ── */
+.flexlayout__tab_toolbar_button {
+  color: #888;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.flexlayout__tab_toolbar_button:hover {
+  color: #fff;
+}
+
+/* ── Floating windows ── */
+.flexlayout__floating_window_content {
+  background-color: #1c1d20;
+}
+
+/* ── Popup menu (overflow tabs) ── */
+.flexlayout__popup_menu {
+  background-color: #24262b;
+  border: 1px solid #3b3d43;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.flexlayout__popup_menu_item {
+  color: #ccc;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.flexlayout__popup_menu_item:hover {
+  background-color: #2d3036;
+  color: #fff;
 }

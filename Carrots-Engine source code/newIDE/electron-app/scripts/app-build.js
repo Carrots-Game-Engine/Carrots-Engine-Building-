@@ -9,6 +9,26 @@ if (!shell.test('-f', './node_modules/.bin/electron-builder')) {
   shell.exit(1);
 }
 
+const cleanStaleBuildArtifacts = () => {
+  const stalePaths = ['dist/win-unpacked.tmp', 'dist/win-unpacked', 'build'];
+  stalePaths.forEach(relativePath => {
+    if (fs.existsSync(path.join(__dirname, '..', relativePath))) {
+      shell.rm('-rf', path.join(__dirname, '..', relativePath));
+    }
+  });
+};
+
+const runAppBuild = () => {
+  if (!args['skip-app-build']) {
+    shell.cd('../app');
+    const buildResult = shell.exec('npm run build');
+    shell.cd('../electron-app');
+    if (buildResult.code !== 0) {
+      shell.exit(1);
+    }
+  }
+};
+
 // Sanity check libGD.js size
 const checkLibGDjsSize = () => {
   const appPublicPath = path.join(__dirname, '../../app/public/');
@@ -46,14 +66,10 @@ if (sizeInMiB > maxSizeInMiB) {
   });
 };
 
+runAppBuild();
+
 checkLibGDjsSize().then(() => {
-  if (!args['skip-app-build']) {
-    shell.cd('../app');
-    if (shell.exec('npm run build').code !== 0) {
-      shell.exit(1);
-    }
-    shell.cd('../electron-app');
-  }
+  cleanStaleBuildArtifacts();
 
   shell.rm('-rf', 'app/www');
   shell.mkdir('-p', 'app/www');

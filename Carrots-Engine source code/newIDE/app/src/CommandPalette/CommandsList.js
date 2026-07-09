@@ -30,6 +30,8 @@ export type CommandName =
   | 'OPEN_PROJECT_RESOURCES'
   | 'OPEN_PROJECT_TYPESCRIPT_SCRIPTS'
   | 'OPEN_SEARCH_EXTENSIONS_DIALOG'
+  | 'CREATE_NEW_EXTERNAL_EVENTS'
+  | 'CREATE_NEW_TYPESCRIPT_SCRIPT'
   | 'OPEN_LAYOUT'
   | 'OPEN_EXTERNAL_EVENTS'
   | 'OPEN_EXTERNAL_LAYOUT'
@@ -210,6 +212,14 @@ const commandsList: { [CommandName]: CommandMetadata } = {
   OPEN_SEARCH_EXTENSIONS_DIALOG: {
     area: 'PROJECT',
     displayText: t`Search/import extensions`,
+  },
+  CREATE_NEW_EXTERNAL_EVENTS: {
+    area: 'PROJECT',
+    displayText: t`Create new external events`,
+  },
+  CREATE_NEW_TYPESCRIPT_SCRIPT: {
+    area: 'PROJECT',
+    displayText: t`Create new TypeScript script`,
   },
 
   // Tab-opening commands

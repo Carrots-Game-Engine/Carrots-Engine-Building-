@@ -10,6 +10,8 @@ type Props = {|
   onOpenTypeScriptScriptsDialog: () => void,
   onOpenSearchExtensionDialog: () => void,
   onOpenPlatformSpecificAssetsDialog: () => void,
+  onCreateNewExternalEvents?: () => void,
+  onCreateNewTypeScriptScript?: () => void,
 |};
 
 const ProjectManagerCommands = (props: Props): null => {
@@ -38,6 +40,14 @@ const ProjectManagerCommands = (props: Props): null => {
 
   useCommand('OPEN_SEARCH_EXTENSIONS_DIALOG', !!props.project, {
     handler: props.onOpenSearchExtensionDialog,
+  });
+
+  useCommand('CREATE_NEW_EXTERNAL_EVENTS', !!props.project, {
+    handler: props.onCreateNewExternalEvents,
+  });
+
+  useCommand('CREATE_NEW_TYPESCRIPT_SCRIPT', !!props.project, {
+    handler: props.onCreateNewTypeScriptScript,
   });
 
   return null;

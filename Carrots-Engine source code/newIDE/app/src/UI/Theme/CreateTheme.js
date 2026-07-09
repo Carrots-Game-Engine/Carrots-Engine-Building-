@@ -45,45 +45,52 @@ export function getMuiOverrides({
   return {
     MuiTypography: {
       h1: {
-        fontSize: '44px',
-        lineHeight: '56px',
-        fontWeight: 900,
+        fontSize: '24px',
+        lineHeight: '32px',
+        fontWeight: 600,
         letterSpacing: '0.01em',
       },
       h2: {
-        fontSize: '33px',
-        lineHeight: '40px',
-        fontWeight: 700,
+        fontSize: '20px',
+        lineHeight: '28px',
+        fontWeight: 600,
       },
       h3: {
-        fontSize: '25px',
-        lineHeight: '32px',
-        fontWeight: 700,
+        fontSize: '18px',
+        lineHeight: '26px',
+        fontWeight: 600,
       },
       h4: {
-        fontSize: '19px',
+        fontSize: '16px',
         lineHeight: '24px',
-        fontWeight: 700,
+        fontWeight: 600,
         letterSpacing: '0.01em',
       },
       h5: {
         fontSize: '14px',
         lineHeight: '20px',
-        fontWeight: 700,
-        letterSpacing: '0.02em',
+        fontWeight: 600,
+        letterSpacing: '0.01em',
       },
       h6: {
-        // Make h6, used in Drawer title bars, use the same weight as tabs and mosaic windows
-        fontWeight: 600,
+        fontSize: '13px',
+        fontWeight: 500,
+        letterSpacing: '0.01em',
       },
       body1: {
-        fontSize: '14px',
+        fontSize: '13px',
         lineHeight: '20px',
         fontWeight: 400,
         letterSpacing: '0.01em',
       },
-      caption: {
+      body2: {
         fontSize: '12px',
+        lineHeight: '18px',
+        fontWeight: 400,
+        letterSpacing: '0.01em',
+      },
+      caption: {
+        fontSize: '11px',
         lineHeight: '16px',
         fontWeight: 400,
         letterSpacing: '0.02em',
@@ -217,25 +224,38 @@ export function getMuiOverrides({
     },
     MuiButton: {
       root: {
-        borderRadius: 10,
+        borderRadius: 6,
         textTransform: 'none',
-        fontWeight: 600,
-        letterSpacing: '0.3px',
+        fontWeight: 500,
+        letterSpacing: '0.2px',
         paddingLeft: 12,
         paddingRight: 12,
+        boxShadow: 'none',
+        '&:hover': {
+          boxShadow: 'none',
+        }
+      },
+      contained: {
+        boxShadow: 'none',
+        '&:hover': {
+          boxShadow: 'none',
+        },
+        '&:active': {
+          boxShadow: 'none',
+        }
       },
       outlined: { borderColor: outlinedButtonBorderColor },
       outlinedSizeSmall: {
         fontSize: '12px',
-        fontWeight: 700,
+        fontWeight: 500,
       },
       containedSizeSmall: {
         fontSize: '12px',
-        fontWeight: 700,
+        fontWeight: 500,
       },
       textSizeSmall: {
         fontSize: '12px',
-        fontWeight: 700,
+        fontWeight: 500,
       },
     },
     MuiSvgIcon: {

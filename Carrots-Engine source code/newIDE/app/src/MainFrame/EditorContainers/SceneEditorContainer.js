@@ -152,6 +152,12 @@ export class SceneEditorContainer extends React.Component<RenderEditorContainerP
     }
   }
 
+  createObjectAndInstance(objectType: string, defaultName: string) {
+    if (this.editor) {
+      this.editor._createObjectAndInstanceUnderCursor(objectType, defaultName);
+    }
+  }
+
   onSceneEventsModifiedOutsideEditor(changes: SceneEventsOutsideEditorChanges) {
     // No thing to be done.
   }
